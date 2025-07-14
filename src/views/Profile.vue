@@ -1,7 +1,7 @@
 <template>
   <div class="profile-page bank-layout" :class="{'dark-mode': isDark}">
     <el-card class="profile-card" shadow="always">
-      <!-- 右上角退出按钮（叉叉） -->
+      <!-- 右上角退出按钮 -->
       <el-button
           class="back-home-btn"
           @click="goHome"
@@ -42,49 +42,34 @@
       </div>
       <el-divider />
 
-      <!-- 信息横排展示，所有字段一排居中，自动均分宽度 -->
-      <div class="profile-section profile-row-horizontal">
-        <div class="profile-row-flex">
-          <div class="profile-field flex-field">
-            <span class="label"><el-icon><Phone /></el-icon> 手机号</span>
-            <span class="value">{{ customer.phone || '-' }}</span>
-          </div>
-          <div class="profile-field flex-field">
-            <span class="label"><el-icon><UserFilled /></el-icon> 性别</span>
-            <span class="value">{{ customer.gender || '-' }}</span>
-          </div>
-          <div class="profile-field flex-field">
-            <span class="label"><el-icon><Calendar /></el-icon> 生日</span>
-            <span class="value">{{ formatDate(customer.birthday) }}</span>
-          </div>
-          <div class="profile-field flex-field">
+      <!-- 左右两列，左对齐 -->
+      <div class="profile-section profile-columns-align">
+        <div class="profile-col left-col">
+          <div class="profile-field">
             <span class="label"><el-icon><Location /></el-icon> 地址</span>
             <span class="value">{{ customer.address || '-' }}</span>
           </div>
-          <div class="profile-field flex-field wide-field">
-            <span class="label"><el-icon><CreditCard /></el-icon> 身份证号</span>
-            <span class="value id-email-value">
-              <template v-if="!showIdNumber">
-                <span class="id-mask">{{ maskIdNumber(customer.idNumber) }}</span>
-                <el-button
-                    size="small"
-                    type="info"
-                    class="id-reveal-btn"
-                    @click="onRevealIdClick"
-                >
-                  <el-icon><View /></el-icon> 查看
-                </el-button>
-              </template>
-              <template v-else>
-                <span class="id-number-real">{{ customer.idNumber }}</span>
-              </template>
-            </span>
+          <div class="profile-field">
+            <span class="label"><el-icon><UserFilled /></el-icon> 性别</span>
+            <span class="value">{{ customer.gender || '-' }}</span>
           </div>
-          <div class="profile-field flex-field wide-field">
+          <div class="profile-field">
+            <span class="label"><el-icon><Calendar /></el-icon> 生日</span>
+            <span class="value">{{ formatDate(customer.birthday) }}</span>
+          </div>
+        </div>
+        <div class="profile-col right-col">
+          <div class="profile-field wide-field">
+            <span class="label"><el-icon><CreditCard /></el-icon> 身份证号</span>
+            <span class="value id-email-value"><span class="id-mask">******</span></span>
+          </div>
+          <div class="profile-field wide-field">
+            <span class="label"><el-icon><Phone /></el-icon> 手机号</span>
+            <span class="value id-email-value">{{ customer.phone || '-' }}</span>
+          </div>
+          <div class="profile-field wide-field">
             <span class="label"><el-icon><Message /></el-icon> 邮箱</span>
-            <span class="value id-email-value">
-              {{ customer.email || '-' }}
-            </span>
+            <span class="value id-email-value">{{ customer.email || '-' }}</span>
           </div>
         </div>
       </div>
@@ -199,13 +184,6 @@ const isDark = ref(false)
 const showIdNumber = ref(false)
 const showFaceDialog = ref(false)
 
-function maskIdNumber(idNumber) {
-  // 显示身份证号最后两位，其余用*号填充
-  if (!idNumber) return '-'
-  const len = idNumber.length
-  if (len <= 2) return idNumber
-  return '*'.repeat(len - 2) + idNumber.slice(-2)
-}
 function formatDate(date) {
   if (!date) return '-'
   const d = typeof date === 'string' ? new Date(date) : date
@@ -298,7 +276,7 @@ onMounted(loadProfile)
   background: #232a3c;
 }
 .profile-card {
-  width: 900px;
+  width: 700px;
   border-radius: 34px;
   box-shadow: 0 12px 32px rgba(25,118,210,0.15);
   font-family: 'Segoe UI', 'PingFang SC', 'Arial', sans-serif;
@@ -396,37 +374,50 @@ onMounted(loadProfile)
   background: linear-gradient(90deg,#395180 80%,#233159 100%);
   color: #7bb4fa;
 }
-.profile-section.profile-row-horizontal {
+
+/* 两列布局，左对齐 */
+.profile-section.profile-columns-align {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 48px;
   margin-bottom: 18px;
   border-radius: 20px;
   background: #f4f7fb;
-  padding: 19px 12px 19px 12px;
+  padding: 22px 0;
   box-shadow: 0 1px 7px rgba(25,118,210,0.07);
   font-size: 1.08rem;
 }
-.bank-layout.dark-mode .profile-section.profile-row-horizontal {
+.bank-layout.dark-mode .profile-section.profile-columns-align {
   background: #232a3c;
 }
-.profile-row-flex {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: stretch;
-  width: 100%;
-  gap: 0;
-}
-.profile-field.flex-field {
+.left-col {
   flex: 1 1 0;
   min-width: 0;
   display: flex;
+  flex-direction: column;
+  gap: 18px;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.right-col {
+  flex: 1.2 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.profile-field {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 7px;
-  padding: 4px 0;
+  gap: 10px;
+  min-width: 0;
+  word-break: break-all;
+  position: relative;
+  padding-bottom: 6px;
 }
 .label {
   min-width: 65px;
@@ -436,7 +427,7 @@ onMounted(loadProfile)
   display: flex;
   align-items: center;
   gap: 5px;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 .bank-layout.dark-mode .label {
   color: #7bb4fa;
@@ -447,13 +438,13 @@ onMounted(loadProfile)
   letter-spacing: 1px;
   font-size: 1.03rem;
   text-align: left;
-  max-width: 95px;
+  max-width: 170px;
   word-break: break-all;
   display: flex;
   align-items: center;
 }
 .wide-field .value, .id-email-value {
-  max-width: 150px;
+  max-width: 240px;
   flex: 1;
   font-size: 1.03rem;
 }
@@ -463,21 +454,6 @@ onMounted(loadProfile)
   color: #aaa;
   font-family: 'Consolas','Courier New',monospace;
   margin-right: 8px;
-}
-.id-reveal-btn {
-  margin-left: 0;
-  vertical-align: middle;
-  font-size: 0.95rem;
-  padding: 2px 8px;
-}
-.id-number-real {
-  font-family: 'Consolas','Courier New',monospace;
-  font-size: 1.04rem;
-  color: #1976d2;
-  background: #e3f2fd;
-  border-radius: 5px;
-  padding: 2px 7px;
-  letter-spacing: 0.12em;
 }
 .face-box {
   margin-bottom: 18px;
@@ -505,13 +481,13 @@ onMounted(loadProfile)
   display: flex;
   align-items: center;
 }
-/* 响应式：横排，小屏自动换行 */
+/* 响应式：两列，小屏自动单列 */
 @media (max-width: 900px) {
   .profile-card { width: 98vw; padding: 12px 2vw; }
   .profile-header { flex-direction: column; gap: 16px; align-items: center;}
-  .profile-section.profile-row-horizontal { padding: 12px 2vw; }
-  .profile-row-flex { flex-direction: column; }
-  .profile-field.flex-field { justify-content: flex-start; gap: 7px; }
+  .profile-section.profile-columns-align { flex-direction: column; gap: 0; padding: 10px 0;}
+  .left-col, .right-col { width: 100%; max-width: 98vw; gap:10px;}
+  .profile-field { gap: 7px; font-size: 1.01rem; max-width: 90vw;}
   .label { min-width: 46px; font-size: 0.95rem;}
   .value, .id-email-value, .wide-field .value { max-width: 96vw; font-size: 0.95rem;}
 }
