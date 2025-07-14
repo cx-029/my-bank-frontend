@@ -10,7 +10,6 @@
             size="large"
             aria-label="返回主页"
         >
-          <!-- 只显示一个叉 -->
           <svg class="close-icon" viewBox="0 0 32 32" width="22" height="22">
             <path d="M10 10 L22 22 M22 10 L10 22" stroke="#1976d2" stroke-width="3" stroke-linecap="round"/>
           </svg>
@@ -19,7 +18,7 @@
             type="primary"
             circle
             class="edit-btn"
-            @click="isEdit = true"
+            @click="openEditDialog"
             v-if="!isEdit"
             aria-label="编辑个人信息"
         >
@@ -43,7 +42,7 @@
       </div>
       <el-divider />
 
-      <!-- 严格对齐左右两列：每一行均为左右并排 label+value -->
+      <!-- 两列严格展示 -->
       <div class="profile-section profile-columns-align">
         <div class="profile-cols-strict-grid">
           <!-- 第一行 -->
@@ -59,7 +58,8 @@
             </div>
             <div class="strict-cell value-cell">
               <span class="value id-email-value">
-                <span v-if="!showIdNumber" class="id-mask">{{ customer.idNumber }}</span>
+                <!-- 展示时始终全*号 -->
+                <span v-if="!showIdNumber" class="id-mask">{{ maskedIdNumber }}</span>
                 <span v-else class="id-real">{{ customer.idNumberReal }}</span>
                 <el-button
                     v-if="!showIdNumber"
@@ -167,9 +167,9 @@
         :close-on-click-modal="false"
         :append-to-body="true"
     >
-      <el-form :model="customer" :rules="rules" ref="formRef" label-width="90px" class="profile-form">
+      <el-form :model="editCustomer" :rules="rules" ref="formRef" label-width="90px" class="profile-form">
         <div class="edit-avatar-box">
-          <el-avatar :size="96" :src="customer.photoUrl || defaultAvatar" class="profile-avatar" />
+          <el-avatar :size="96" :src="editCustomer.photoUrl || defaultAvatar" class="profile-avatar" />
           <el-upload
               class="avatar-uploader"
               :show-file-list="false"
@@ -184,26 +184,33 @@
           </el-upload>
         </div>
         <el-form-item label="性别">
-          <el-select v-model="customer.gender" placeholder="请选择">
+          <el-select v-model="editCustomer.gender" placeholder="请选择">
             <el-option label="男" value="男" />
             <el-option label="女" value="女" />
             <el-option label="其他" value="其他" />
           </el-select>
         </el-form-item>
         <el-form-item label="身份证号">
-          <el-input v-model="customer.idNumber" type="password" show-password maxlength="18" />
+          <!-- 不展示旧身份证号，仅可输入新号 -->
+          <el-input
+              v-model="editCustomer.idNumber"
+              placeholder="如需修改请输入新身份证号"
+              maxlength="18"
+              show-password
+              type="password"
+          />
         </el-form-item>
         <el-form-item label="生日">
-          <el-date-picker v-model="customer.birthday" type="date" placeholder="请选择生日" />
+          <el-date-picker v-model="editCustomer.birthday" type="date" placeholder="请选择生日" />
         </el-form-item>
         <el-form-item label="电话">
-          <el-input v-model="customer.phone" />
+          <el-input v-model="editCustomer.phone" />
         </el-form-item>
         <el-form-item label="邮箱">
-          <el-input v-model="customer.email" />
+          <el-input v-model="editCustomer.email" />
         </el-form-item>
         <el-form-item label="地址">
-          <el-input v-model="customer.address" />
+          <el-input v-model="editCustomer.address" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -215,7 +222,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getProfile, updateProfile } from '@/api/profile'
 import { Edit, UserFilled, CreditCard, Phone, Message, Location, Upload, Calendar, View, DocumentCopy } from '@element-plus/icons-vue'
@@ -236,12 +243,30 @@ const customer = ref({
   photoUrl: '',
   idNumberReal: ''
 })
+// 用于编辑弹窗单独管理，避免泄露原身份证号
+const editCustomer = ref({
+  name: '',
+  gender: '',
+  id: '',
+  idNumber: '', // 编辑时始终为空
+  birthday: '',
+  address: '',
+  phone: '',
+  email: '',
+  photoUrl: ''
+})
 const defaultAvatar = 'https://api.dicebear.com/7.x/identicon/svg?seed=bankuser'
 const formRef = ref(null)
 const rules = {}
 const isEdit = ref(false)
 const isDark = ref(false)
 const showIdNumber = ref(false)
+
+// 展示时全部用*号
+const maskedIdNumber = computed(() => {
+  const len = customer.value.idNumber ? customer.value.idNumber.length : 18
+  return '*'.repeat(len)
+})
 
 // 人脸识别相关
 const faceDialogVisible = ref(false)
@@ -300,7 +325,7 @@ async function submitFaceRecognize() {
   try {
     const res = await axios.post('/api/profile/id-number', { base64Image: faceImage.value })
     if (res.data) {
-      customer.value.idNumberReal = res.data.toString()
+      customer.value.idNumberReal = res.data.idNumber
       showIdNumber.value = true
       faceDialogVisible.value = false
       ElMessage.success('人脸识别成功，已显示身份证号')
@@ -328,6 +353,18 @@ const loadProfile = async () => {
     const res = await getProfile()
     if (res.data) {
       customer.value = { ...customer.value, ...res.data }
+      // 编辑弹窗不展示旧身份证号
+      editCustomer.value = {
+        name: customer.value.name,
+        gender: customer.value.gender,
+        id: customer.value.id,
+        idNumber: '', // 不预填身份证号！
+        birthday: customer.value.birthday,
+        address: customer.value.address,
+        phone: customer.value.phone,
+        email: customer.value.email,
+        photoUrl: customer.value.photoUrl
+      }
     }
     isEdit.value = false
     showIdNumber.value = false
@@ -336,13 +373,30 @@ const loadProfile = async () => {
     ElMessage.error('获取个人信息失败，请重试')
   }
 }
+
+const openEditDialog = () => {
+  // reload editCustomer from customer, 并保证 idNumber 为空
+  editCustomer.value = {
+    name: customer.value.name,
+    gender: customer.value.gender,
+    id: customer.value.id,
+    idNumber: '', // 不预填身份证号
+    birthday: customer.value.birthday,
+    address: customer.value.address,
+    phone: customer.value.phone,
+    email: customer.value.email,
+    photoUrl: customer.value.photoUrl
+  }
+  isEdit.value = true
+}
+
 const cancelEdit = async () => {
   await loadProfile()
   isEdit.value = false
 }
 const onSubmit = async () => {
   try {
-    await updateProfile(customer.value)
+    await updateProfile(editCustomer.value)
     ElMessage.success('个人信息已保存')
     await loadProfile()
   } catch (e) {
@@ -356,7 +410,7 @@ function goHome() {
 // 头像上传相关
 function handleAvatarSuccess(response) {
   if (response.url) {
-    customer.value.photoUrl = response.url
+    editCustomer.value.photoUrl = response.url
     ElMessage.success('头像上传成功')
   }
 }
