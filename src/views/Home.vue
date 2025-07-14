@@ -212,11 +212,16 @@ const sendAIMessage = async () => {
     aiInputRef.value && aiInputRef.value.focus()
     scrollToBottom()
   })
-  // 模拟AI响应
-  setTimeout(() => {
-    chatList.value.push({ role: 'ai', text: `AI助手：这是针对“${q}”的智能回复。` })
+
+  try {
+    // 调用后端AI助手接口
+    const res = await axios.post('/api/ai/chat', { question: q })
+    chatList.value.push({ role: 'ai', text: res.data.answer || 'AI助手未能理解您的问题。' })
     nextTick(scrollToBottom)
-  }, 700)
+  } catch (e) {
+    chatList.value.push({ role: 'ai', text: 'AI助手服务暂时不可用，请稍后再试。' })
+    nextTick(scrollToBottom)
+  }
 }
 const ctrlEnterSend = (e) => {
   if (e.ctrlKey && e.key === 'Enter') {
