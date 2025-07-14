@@ -3,16 +3,19 @@ import Login from '../views/Login.vue'
 import Home from '../views/Home.vue'
 import Register from '@/views/Register.vue'
 import Admin from '../views/Admin.vue'
-import Profile from "@/views/Profile.vue";
+import Profile from "@/views/Profile.vue"
+// 新增账户管理页面
+import Account from "../views/Account.vue"
 
 const routes = [
     { path: '/register', component: Register },
     { path: '/login', component: Login },
     { path: '/home', component: Home },
     { path: '/admin', component: Admin },
-    { path: '/', redirect: '/login' },
-    { path: '/:pathMatch(.*)*', redirect: '/login' },
     { path: '/profile', component: Profile },
+    { path: '/account', component: Account }, // 账户管理页面路由
+    { path: '/', redirect: '/login' },
+    { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
 
 const router = createRouter({

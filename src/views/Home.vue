@@ -189,6 +189,8 @@ const handleMenuSelect = (index) => {
   activeMenu.value = index
   if (index === 'profile') {
     router.push('/profile')
+  } else if (index === 'account') {
+    router.push('/account')
   } else {
     ElMessage.info(`【${menuName(index)}】功能开发中`)
   }
