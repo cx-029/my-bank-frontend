@@ -1,20 +1,31 @@
 <template>
   <div class="profile-page bank-layout" :class="{'dark-mode': isDark}">
     <el-card class="profile-card" shadow="always">
-      <!-- 右上角退出按钮 -->
-      <el-button
-          class="back-home-btn"
-          @click="goHome"
-          circle
-          size="large"
-          style="position:absolute;top:18px;right:18px;z-index:10;"
-          aria-label="返回主页"
-      >
-        <svg class="close-icon" viewBox="0 0 32 32" width="22" height="22">
-          <circle cx="16" cy="16" r="15" fill="#e3f2fd"/>
-          <path d="M10 10 L22 22 M22 10 L10 22" stroke="#1976d2" stroke-width="3" stroke-linecap="round"/>
-        </svg>
-      </el-button>
+      <!-- 右上角按钮组 -->
+      <div class="card-action-buttons">
+        <el-button
+            class="back-home-btn"
+            @click="goHome"
+            circle
+            size="large"
+            aria-label="返回主页"
+        >
+          <!-- 只显示一个叉 -->
+          <svg class="close-icon" viewBox="0 0 32 32" width="22" height="22">
+            <path d="M10 10 L22 22 M22 10 L10 22" stroke="#1976d2" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </el-button>
+        <el-button
+            type="primary"
+            circle
+            class="edit-btn"
+            @click="isEdit = true"
+            v-if="!isEdit"
+            aria-label="编辑个人信息"
+        >
+          <el-icon><Edit /></el-icon>
+        </el-button>
+      </div>
       <div class="profile-header">
         <div class="profile-avatar-wrap">
           <el-avatar :size="110" :src="customer.photoUrl || defaultAvatar" class="profile-avatar" />
@@ -29,71 +40,120 @@
             用户ID：{{ customer.id }}
           </div>
         </div>
-        <el-button
-            type="primary"
-            circle
-            class="edit-btn"
-            @click="isEdit = true"
-            v-if="!isEdit"
-            style="position:absolute;top:18px;right:68px;z-index:10;"
-        >
-          <el-icon><Edit /></el-icon>
-        </el-button>
       </div>
       <el-divider />
 
-      <!-- 左右两列，左对齐 -->
+      <!-- 严格对齐左右两列：每一行均为左右并排 label+value -->
       <div class="profile-section profile-columns-align">
-        <div class="profile-col left-col">
-          <div class="profile-field">
-            <span class="label"><el-icon><Location /></el-icon> 地址</span>
-            <span class="value">{{ customer.address || '-' }}</span>
+        <div class="profile-cols-strict-grid">
+          <!-- 第一行 -->
+          <div class="strict-row">
+            <div class="strict-cell label-cell">
+              <span class="label"><el-icon><Location /></el-icon> 地址</span>
+            </div>
+            <div class="strict-cell value-cell">
+              <span class="value">{{ customer.address || '-' }}</span>
+            </div>
+            <div class="strict-cell label-cell">
+              <span class="label"><el-icon><CreditCard /></el-icon> 身份证号</span>
+            </div>
+            <div class="strict-cell value-cell">
+              <span class="value id-email-value">
+                <span v-if="!showIdNumber" class="id-mask">{{ customer.idNumber }}</span>
+                <span v-else class="id-real">{{ customer.idNumberReal }}</span>
+                <el-button
+                    v-if="!showIdNumber"
+                    type="text"
+                    class="id-reveal-btn"
+                    @click="onRevealIdClick"
+                    aria-label="查看身份证号"
+                >
+                  <el-icon><View /></el-icon>
+                </el-button>
+              </span>
+            </div>
           </div>
-          <div class="profile-field">
-            <span class="label"><el-icon><UserFilled /></el-icon> 性别</span>
-            <span class="value">{{ customer.gender || '-' }}</span>
+          <!-- 第二行 -->
+          <div class="strict-row">
+            <div class="strict-cell label-cell">
+              <span class="label"><el-icon><UserFilled /></el-icon> 性别</span>
+            </div>
+            <div class="strict-cell value-cell">
+              <span class="value">{{ customer.gender || '-' }}</span>
+            </div>
+            <div class="strict-cell label-cell">
+              <span class="label"><el-icon><Phone /></el-icon> 手机号</span>
+            </div>
+            <div class="strict-cell value-cell">
+              <span class="value id-email-value">{{ customer.phone || '-' }}
+                <el-button
+                    type="text"
+                    class="copy-btn"
+                    @click="copyToClipboard(customer.phone)"
+                    v-if="customer.phone"
+                    aria-label="复制手机号"
+                >
+                  <el-icon><DocumentCopy /></el-icon>
+                </el-button>
+              </span>
+            </div>
           </div>
-          <div class="profile-field">
-            <span class="label"><el-icon><Calendar /></el-icon> 生日</span>
-            <span class="value">{{ formatDate(customer.birthday) }}</span>
-          </div>
-        </div>
-        <div class="profile-col right-col">
-          <div class="profile-field wide-field">
-            <span class="label"><el-icon><CreditCard /></el-icon> 身份证号</span>
-            <span class="value id-email-value"><span class="id-mask">******</span></span>
-          </div>
-          <div class="profile-field wide-field">
-            <span class="label"><el-icon><Phone /></el-icon> 手机号</span>
-            <span class="value id-email-value">{{ customer.phone || '-' }}</span>
-          </div>
-          <div class="profile-field wide-field">
-            <span class="label"><el-icon><Message /></el-icon> 邮箱</span>
-            <span class="value id-email-value">{{ customer.email || '-' }}</span>
+          <!-- 第三行 -->
+          <div class="strict-row">
+            <div class="strict-cell label-cell">
+              <span class="label"><el-icon><Calendar /></el-icon> 生日</span>
+            </div>
+            <div class="strict-cell value-cell">
+              <span class="value">{{ formatDate(customer.birthday) }}</span>
+            </div>
+            <div class="strict-cell label-cell">
+              <span class="label"><el-icon><Message /></el-icon> 邮箱</span>
+            </div>
+            <div class="strict-cell value-cell">
+              <span class="value id-email-value">{{ customer.email || '-' }}
+                <el-button
+                    type="text"
+                    class="copy-btn"
+                    @click="copyToClipboard(customer.email)"
+                    v-if="customer.email"
+                    aria-label="复制邮箱"
+                >
+                  <el-icon><DocumentCopy /></el-icon>
+                </el-button>
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- 人脸识别弹窗 -->
+      <!-- 人脸识别弹窗（摄像头拍照/识别） -->
       <el-dialog
-          v-model="showFaceDialog"
+          v-model="faceDialogVisible"
           title="人脸识别验证"
           width="400px"
           :close-on-click-modal="false"
           :append-to-body="true"
+          class="fade-dialog"
       >
-        <div style="text-align:center;padding:30px 0;">
-          <div class="face-box">
-            <svg width="80" height="80" viewBox="0 0 80 80">
-              <circle cx="40" cy="40" r="36" fill="#e3f2fd" stroke="#1976d2" stroke-width="3"/>
-              <ellipse cx="40" cy="48" rx="17" ry="8" fill="#bbdefb"/>
-              <circle cx="32" cy="38" r="5" fill="#1976d2"/>
-              <circle cx="48" cy="38" r="5" fill="#1976d2"/>
-              <ellipse cx="40" cy="55" rx="7" ry="3" fill="#1976d2" opacity="0.18"/>
-            </svg>
+        <div class="face-dialog-content">
+          <div v-if="!faceCaptured">
+            <div class="face-video-box">
+              <video ref="videoRef" width="340" height="240" autoplay />
+            </div>
+            <div class="face-btn-row-center">
+              <el-button type="primary" @click="captureFace">拍照</el-button>
+              <el-button @click="closeFaceDialog">取消</el-button>
+            </div>
           </div>
-          <div style="margin:18px 0 10px;font-size:1.18rem;color:#1976d2;font-weight:600;">请进行人脸识别</div>
-          <el-button type="primary" @click="faceRecognize">开始识别</el-button>
+          <div v-else>
+            <div class="face-video-box">
+              <img :src="faceImage" alt="face" width="340" height="240" />
+            </div>
+            <div class="face-btn-row-center">
+              <el-button type="success" @click="submitFaceRecognize">提交识别</el-button>
+              <el-button @click="resetFace">重拍</el-button>
+            </div>
+          </div>
         </div>
       </el-dialog>
     </el-card>
@@ -103,7 +163,7 @@
         v-model="isEdit"
         title="编辑个人信息"
         width="520px"
-        class="profile-dialog"
+        class="profile-dialog fade-dialog"
         :close-on-click-modal="false"
         :append-to-body="true"
     >
@@ -155,10 +215,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getProfile, updateProfile } from '@/api/profile'
-import { Edit, UserFilled, CreditCard, Phone, Message, Location, Upload, Calendar, View } from '@element-plus/icons-vue'
+import { Edit, UserFilled, CreditCard, Phone, Message, Location, Upload, Calendar, View, DocumentCopy } from '@element-plus/icons-vue'
 import axios from "axios"
 import { useRouter } from 'vue-router'
 
@@ -173,31 +233,94 @@ const customer = ref({
   address: '',
   phone: '',
   email: '',
-  photoUrl: ''
+  photoUrl: '',
+  idNumberReal: ''
 })
 const defaultAvatar = 'https://api.dicebear.com/7.x/identicon/svg?seed=bankuser'
 const formRef = ref(null)
 const rules = {}
 const isEdit = ref(false)
 const isDark = ref(false)
-
 const showIdNumber = ref(false)
-const showFaceDialog = ref(false)
+
+// 人脸识别相关
+const faceDialogVisible = ref(false)
+const faceCaptured = ref(false)
+const faceImage = ref('')
+const stream = ref(null)
+const videoRef = ref(null)
 
 function formatDate(date) {
   if (!date) return '-'
   const d = typeof date === 'string' ? new Date(date) : date
   return d.toLocaleDateString()
 }
-function onRevealIdClick() {
-  showFaceDialog.value = true
+async function onRevealIdClick() {
+  faceDialogVisible.value = true
+  faceCaptured.value = false
+  faceImage.value = ''
+  await nextTick()
+  try {
+    stream.value = await navigator.mediaDevices.getUserMedia({ video: true })
+    videoRef.value.srcObject = stream.value
+  } catch (err) {
+    ElMessage.error('无法访问摄像头，请检查权限')
+    faceDialogVisible.value = false
+  }
 }
-function faceRecognize() {
-  setTimeout(() => {
-    showIdNumber.value = true
-    showFaceDialog.value = false
-    ElMessage.success('人脸识别成功，已显示身份证号')
-  }, 1200)
+function captureFace() {
+  const video = videoRef.value
+  const canvas = document.createElement('canvas')
+  canvas.width = 340
+  canvas.height = 240
+  const ctx = canvas.getContext('2d')
+  ctx.drawImage(video, 0, 0, 340, 240)
+  faceImage.value = canvas.toDataURL('image/png')
+  faceCaptured.value = true
+  stopCamera()
+}
+async function resetFace() {
+  faceCaptured.value = false
+  faceImage.value = ''
+  await onRevealIdClick()
+}
+function closeFaceDialog() {
+  stopCamera()
+  faceDialogVisible.value = false
+  faceCaptured.value = false
+  faceImage.value = ''
+}
+function stopCamera() {
+  if (stream.value) {
+    stream.value.getTracks().forEach(track => track.stop())
+    stream.value = null
+  }
+}
+async function submitFaceRecognize() {
+  try {
+    const res = await axios.post('/api/profile/id-number', { base64Image: faceImage.value })
+    if (res.data) {
+      customer.value.idNumberReal = res.data.toString()
+      showIdNumber.value = true
+      faceDialogVisible.value = false
+      ElMessage.success('人脸识别成功，已显示身份证号')
+    } else {
+      ElMessage.error('人脸识别失败')
+    }
+  } catch (e) {
+    ElMessage.error('人脸识别请求失败')
+    faceDialogVisible.value = false
+  }
+}
+
+// 复制内容到剪贴板
+function copyToClipboard(val) {
+  if (!val) return
+  navigator.clipboard.writeText(val).then(() => {
+    ElMessage.success('已复制')
+  }, () => {
+    ElMessage.error('复制失败')
+  })
 }
 
 const loadProfile = async () => {
@@ -208,7 +331,7 @@ const loadProfile = async () => {
     }
     isEdit.value = false
     showIdNumber.value = false
-    showFaceDialog.value = false
+    faceDialogVisible.value = false
   } catch (e) {
     ElMessage.error('获取个人信息失败，请重试')
   }
@@ -264,48 +387,52 @@ onMounted(loadProfile)
 </script>
 
 <style scoped>
-.profile-page {
-  min-height: 100vh;
-  width: 100vw;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #f8fafc;
-}
-.bank-layout.dark-mode .profile-page {
-  background: #232a3c;
-}
 .profile-card {
-  width: 700px;
-  border-radius: 34px;
-  box-shadow: 0 12px 32px rgba(25,118,210,0.15);
-  font-family: 'Segoe UI', 'PingFang SC', 'Arial', sans-serif;
-  position: relative;
-  padding: 44px 22px 32px 22px;
+  border-radius: 36px;
+  box-shadow: 0 16px 48px rgba(25,118,210,0.18);
   background: linear-gradient(120deg, #f8fafc 80%, #e6eeff 100%);
+  padding: 44px 22px 32px 22px;
   margin: auto;
+  position: relative;
+  overflow: visible;
 }
 .bank-layout.dark-mode .profile-card {
   background: linear-gradient(120deg, #232a3c 60%, #2d3446 100%);
 }
-.back-home-btn {
-  background: linear-gradient(90deg,#bbdefb 70%,#e3f2fd 100%);
-  color: #1976d2;
-  box-shadow: 0 2px 12px rgba(25,118,210,0.08);
-  border-radius: 50%;
-  border: none;
-  font-size: 1.15rem;
+
+/* 右上角按钮组 */
+.card-action-buttons {
+  position: absolute;
+  top: 18px;
+  right: 18px;
   display: flex;
+  gap: 16px;
+  z-index: 10;
   align-items: center;
-  justify-content: center;
+}
+.back-home-btn,
+.edit-btn {
+  transition: background 0.19s, color 0.19s, box-shadow 0.19s, transform 0.18s;
+}
+.back-home-btn {
+  background: #fff;
+  color: #1976d2;
+  border: none;
+  box-shadow: 0 2px 8px rgba(25,118,210,0.08);
+}
+.back-home-btn:hover,
+.edit-btn:hover {
+  background: #e3f2fd;
+  color: #1976d2;
+  box-shadow: 0 4px 16px rgba(25,118,210,0.15);
+  transform: translateY(-2px) scale(1.08);
 }
 .close-icon {
   vertical-align: middle;
+  background: none;
 }
-.back-home-btn:hover {
-  background: #e3f2fd;
-  color: #1976d2;
-}
+
+/* 主体信息头部 */
 .profile-header {
   display: flex;
   align-items: center;
@@ -335,53 +462,40 @@ onMounted(loadProfile)
   min-width: 160px;
 }
 .profile-name {
-  font-size: 1.28rem;
-  font-weight: 700;
+  font-size: 1.32rem;
+  font-family: 'Noto Sans SC','Segoe UI','PingFang SC','Arial',sans-serif;
+  font-weight: 800;
   color: #1976d2;
   letter-spacing: 1px;
   margin-bottom: 8px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   word-break: break-all;
 }
 .bank-layout.dark-mode .profile-name {
   color: #7bb4fa;
 }
 .profile-id {
-  font-size: 1.09rem;
+  font-size: 1.11rem;
   color: #264062;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   word-break: break-all;
+  font-family: 'Noto Sans SC','Segoe UI','Arial',sans-serif;
 }
 .bank-layout.dark-mode .profile-id {
   color: #b7d6ff;
 }
-.edit-btn {
-  border-radius: 50%;
-  background: linear-gradient(90deg,#1976d2 60%,#53a6e7 100%);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(25,118,210,0.09);
-  font-size: 1.15rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.bank-layout.dark-mode .edit-btn {
-  background: linear-gradient(90deg,#395180 80%,#233159 100%);
-  color: #7bb4fa;
-}
 
-/* 两列布局，左对齐 */
+/* 严格两列对齐排版 */
 .profile-section.profile-columns-align {
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: flex-start;
-  gap: 48px;
   margin-bottom: 18px;
   border-radius: 20px;
   background: #f4f7fb;
@@ -389,78 +503,72 @@ onMounted(loadProfile)
   box-shadow: 0 1px 7px rgba(25,118,210,0.07);
   font-size: 1.08rem;
 }
-.bank-layout.dark-mode .profile-section.profile-columns-align {
-  background: #232a3c;
+.profile-cols-strict-grid {
+  display: grid;
+  grid-template-rows: repeat(3, auto);
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  width: 100%;
 }
-.left-col {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  justify-content: flex-start;
-  align-items: flex-start;
+.strict-row {
+  display: contents;
 }
-.right-col {
-  flex: 1.2 1 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  justify-content: flex-start;
-  align-items: flex-start;
-}
-.profile-field {
+.strict-cell {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
-  word-break: break-all;
-  position: relative;
-  padding-bottom: 6px;
+  padding: 8px 0;
 }
-.label {
-  min-width: 65px;
+.label-cell .label {
+  font-size: 1.09rem;
+  min-width: 120px;
   color: #1976d2;
-  font-weight: 600;
-  font-size: 1.03rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
   display: flex;
   align-items: center;
-  gap: 5px;
-  justify-content: flex-start;
+  gap: 8px;
+  font-family: 'Noto Sans SC','Segoe UI','Arial',sans-serif;
 }
-.bank-layout.dark-mode .label {
-  color: #7bb4fa;
-}
-.value {
-  color: #264062;
-  font-weight: 500;
-  letter-spacing: 1px;
-  font-size: 1.03rem;
-  text-align: left;
-  max-width: 170px;
+.value-cell .value {
+  font-size: 1.13rem;
+  max-width: 320px;
   word-break: break-all;
-  display: flex;
-  align-items: center;
+  color: #222;
+  font-family: 'Consolas','JetBrains Mono','PingFang SC',monospace;
+  font-weight: 500;
+  transition: color 0.19s;
 }
-.wide-field .value, .id-email-value {
-  max-width: 240px;
-  flex: 1;
-  font-size: 1.03rem;
+.id-email-value {
+  font-family: 'Consolas','JetBrains Mono','PingFang SC',monospace;
 }
 .id-mask {
   letter-spacing: 0.22em;
-  font-size: 1.06rem;
-  color: #aaa;
-  font-family: 'Consolas','Courier New',monospace;
+  font-size: 1.12rem;
+  color: #888;
+  font-family: 'Consolas','JetBrains Mono',monospace;
   margin-right: 8px;
 }
-.face-box {
-  margin-bottom: 18px;
+.id-reveal-btn, .copy-btn {
+  margin-left: 8px;
+  vertical-align: middle;
+  font-size: 1rem;
+  padding: 0 6px;
+  cursor: pointer;
+  transition: background 0.19s, color 0.19s, box-shadow 0.19s;
 }
-.bank-layout.dark-mode .value {
+.id-reveal-btn:hover, .copy-btn:hover {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  box-shadow: 0 2px 10px rgba(25,118,210,0.12);
+}
+.bank-layout.dark-mode .value-cell .value,
+.bank-layout.dark-mode .id-email-value {
   color: #b7d6ff;
 }
+.bank-layout.dark-mode .label-cell .label {
+  color: #7bb4fa;
+}
+
 .profile-dialog :deep(.el-dialog__header) {
   background: #e3f2fd;
   font-weight: 700;
@@ -481,14 +589,61 @@ onMounted(loadProfile)
   display: flex;
   align-items: center;
 }
-/* 响应式：两列，小屏自动单列 */
+
+/* 人脸识别弹窗内容居中和动画 */
+.face-dialog-content, .fade-dialog {
+  animation: fadeIn 0.32s cubic-bezier(.33,.91,.54,.97);
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.96);}
+  to { opacity: 1; transform: scale(1);}
+}
+.face-video-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 340px;
+  height: 240px;
+  margin-bottom: 12px;
+}
+.face-video-box video,
+.face-video-box img {
+  border-radius: 8px;
+  width: 340px;
+  height: 240px;
+  object-fit: cover;
+}
+/* 人脸识别按钮居中 */
+.face-btn-row-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+  margin-top: 18px;
+}
+/* 响应式严格两列自动单列 */
 @media (max-width: 900px) {
   .profile-card { width: 98vw; padding: 12px 2vw; }
   .profile-header { flex-direction: column; gap: 16px; align-items: center;}
-  .profile-section.profile-columns-align { flex-direction: column; gap: 0; padding: 10px 0;}
-  .left-col, .right-col { width: 100%; max-width: 98vw; gap:10px;}
-  .profile-field { gap: 7px; font-size: 1.01rem; max-width: 90vw;}
-  .label { min-width: 46px; font-size: 0.95rem;}
-  .value, .id-email-value, .wide-field .value { max-width: 96vw; font-size: 0.95rem;}
+  .profile-section.profile-columns-align { padding: 10px 0;}
+  .profile-cols-strict-grid { grid-template-columns: 1fr 1fr; }
+  .strict-cell { padding: 8px 0; }
+  .label-cell .label { min-width: 46px; font-size: 1rem;}
+  .value-cell .value, .id-email-value {
+    max-width: 96vw;
+    min-width: 0;
+    font-size: 1.04rem;
+  }
+  .face-video-box {
+    width: 92vw;
+    height: auto;
+  }
+  .face-video-box video,
+  .face-video-box img {
+    width: 92vw;
+    height: auto;
+    max-width: 340px;
+    max-height: 240px;
+  }
 }
 </style>
