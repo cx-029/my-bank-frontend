@@ -84,6 +84,22 @@
       </el-menu>
     </aside>
 
+    <!-- 人脸识别弹窗 -->
+    <el-dialog v-model="showFaceDialog" title="人脸识别验证" width="420px" center>
+      <div class="face-dialog-content">
+        <div class="face-title">请进行人脸识别，以进入存取管理</div>
+        <div class="face-preview">
+          <video ref="videoRef" class="face-video" autoplay playsinline width="320" height="240"></video>
+          <canvas ref="canvasRef" style="display:none;" width="320" height="240"></canvas>
+        </div>
+        <div class="face-btn-row">
+          <el-button type="primary" :loading="faceLoading" @click="captureFace">拍照并识别</el-button>
+          <el-button @click="closeFaceDialog">取消</el-button>
+        </div>
+        <div v-if="faceError" class="face-error">{{ faceError }}</div>
+      </div>
+    </el-dialog>
+
     <!-- 主内容区 -->
     <main class="bank-main">
       <div class="ai-main-scroll">
@@ -175,6 +191,12 @@ const aiInputRef = ref(null)
 const showAvatarAnim = ref(true)
 const chatList = ref([])
 
+const showFaceDialog = ref(false)
+const faceLoading = ref(false)
+const faceError = ref('')
+const videoRef = ref(null)
+const canvasRef = ref(null)
+
 const logout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('role')
@@ -185,16 +207,18 @@ const logout = () => {
 const goProfile = () => {
   router.push('/profile')
 }
-const handleMenuSelect = (index) => {
-  activeMenu.value = index
-  if (index === 'profile') {
-    router.push('/profile')
+
+const handleMenuSelect = async (index) => {
+  activeMenu.value = index;
+  if (index === 'deposit') {
+    // 直接弹出人脸识别弹窗
+    openFaceDialog();
+  } else if (index === 'profile') {
+    router.push('/profile');
   } else if (index === 'account') {
-    router.push('/account')
-  } else if (index === 'deposit') {
-    router.push('/deposit')
-  }else {
-    ElMessage.info(`【${menuName(index)}】功能开发中`)
+    router.push('/account');
+  } else {
+    ElMessage.info(`【${menuName(index)}】功能开发中`);
   }
 }
 const menuName = (index) =>
@@ -238,6 +262,59 @@ const voiceInput = () => {
 function scrollToBottom() {
   const dialog = document.querySelector('.ai-dialog')
   if (dialog) dialog.scrollTop = dialog.scrollHeight
+}
+
+// 人脸识别弹窗流程
+const openFaceDialog = async () => {
+  faceError.value = ''
+  showFaceDialog.value = true
+  await nextTick()
+  try {
+    // 调用摄像头
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+    if (videoRef.value) {
+      videoRef.value.srcObject = stream
+    }
+  } catch (e) {
+    faceError.value = '无法访问摄像头，请检查浏览器权限或设备支持'
+  }
+}
+const closeFaceDialog = () => {
+  showFaceDialog.value = false
+  stopCamera()
+  faceError.value = ''
+}
+function stopCamera() {
+  if (videoRef.value && videoRef.value.srcObject) {
+    let tracks = videoRef.value.srcObject.getTracks()
+    tracks.forEach(track => track.stop())
+    videoRef.value.srcObject = null
+  }
+}
+const captureFace = async () => {
+  faceError.value = ''
+  faceLoading.value = true
+  try {
+    // 截取摄像头当前画面
+    const video = videoRef.value
+    const canvas = canvasRef.value
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    const base64Image = canvas.toDataURL('image/jpeg')
+    // 后端接口识别人脸
+    const res = await axios.post('/api/account/face-verify', { image: base64Image })
+    if (res.data && res.data.success) {
+      ElMessage.success('人脸识别成功，已进入存取管理')
+      closeFaceDialog()
+      router.push('/deposit')
+    } else {
+      faceError.value = res.data.error || '人脸识别失败，请确保正对摄像头并重试'
+    }
+  } catch (e) {
+    faceError.value = '识别过程中发生错误，请重试'
+  } finally {
+    faceLoading.value = false
+  }
 }
 
 onMounted(async () => {
@@ -762,5 +839,38 @@ onMounted(async () => {
   .username-full {
     max-width: 100px;
   }
+}
+
+.face-dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0 0 0;
+}
+.face-title {
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 14px;
+  letter-spacing: 1px;
+}
+.face-preview {
+  margin-bottom: 16px;
+}
+.face-video {
+  border-radius: 10px;
+  border: 2px solid #e3f2fd;
+  background: #222;
+}
+.face-btn-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 10px;
+}
+.face-error {
+  color: #ef5350;
+  font-size: 1.07rem;
+  margin-top: 7px;
+  font-weight: 600;
 }
 </style>
