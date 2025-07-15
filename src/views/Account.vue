@@ -1,6 +1,9 @@
 <template>
-  <div class="account-page-finance">
-    <el-card class="account-card-finance" shadow="always">
+  <div class="account-page-finance-decor">
+    <!-- 背景渐变与装饰光斑 -->
+    <div class="bg-gradient-blob"></div>
+    <div class="bg-gold-decoration"></div>
+    <el-card class="glass-card account-card-finance" shadow="always">
       <!-- 顶部按钮行 -->
       <div class="finance-header-row">
         <span class="finance-title">我的账户</span>
@@ -18,14 +21,17 @@
       </div>
       <div class="finance-main-content">
         <div class="bank-card-section">
-          <div class="bank-card-bg">
+          <div class="bank-card-bg-glass">
             <div class="bank-logo-title">
               <span class="bank-logo"></span>
               <span class="bank-title">MyBank 金融账户</span>
             </div>
             <div class="bank-card-info-row">
               <span class="bank-card-label">余额</span>
-              <span class="bank-card-value">￥{{ account?.balance ?? '--' }}</span>
+              <span class="bank-card-value animate-balance">
+                ￥{{ account?.balance ?? '--' }}
+                <img v-if="account?.balance >= 100000" src="https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f451.png" alt="crown" class="balance-crown"/>
+              </span>
             </div>
             <div class="bank-card-info-row">
               <span class="bank-card-label">银行卡号</span>
@@ -46,19 +52,34 @@
             </div>
           </div>
         </div>
-        <!-- 三个信息平铺一行 -->
+        <!-- 三个信息一行，分割线分隔，加icon美化 -->
         <div class="finance-detail-section-row">
           <div class="detail-item">
-            <div class="detail-label">账户ID</div>
+            <div class="detail-label">
+              <el-icon style="margin-right:4px;"><User /></el-icon>
+              账户ID
+            </div>
             <div class="detail-value">{{ account?.id ?? '-' }}</div>
           </div>
+          <div class="vertical-divider"></div>
           <div class="detail-item">
-            <div class="detail-label">账户类型</div>
+            <div class="detail-label">
+              <el-icon style="margin-right:4px;"><CreditCard /></el-icon>
+              账户类型
+            </div>
             <div class="detail-value">{{ account?.accountType ?? '-' }}</div>
           </div>
+          <div class="vertical-divider"></div>
           <div class="detail-item">
-            <div class="detail-label">账户状态</div>
-            <div class="detail-value">{{ account?.status ?? '-' }}</div>
+            <div class="detail-label">
+              <el-icon style="margin-right:4px;"><CircleCheck /></el-icon>
+              账户状态
+            </div>
+            <div class="detail-value">
+              <el-tag :type="account?.status === '正常' ? 'success' : account?.status === '冻结' ? 'danger' : 'warning'" effect="dark" size="small">
+                {{ account?.status ?? '-' }}
+              </el-tag>
+            </div>
           </div>
         </div>
       </div>
@@ -118,7 +139,7 @@
 import { ref, onMounted, nextTick } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import { Edit, Refresh, Close, View } from '@element-plus/icons-vue'
+import { Edit, Refresh, Close, View, User, CreditCard, CircleCheck } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -232,52 +253,93 @@ async function submitFaceReveal() {
 </script>
 
 <style scoped>
-.account-page-finance {
+.account-page-finance-decor {
   width: 100vw;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding-top: 56px;
-  background: linear-gradient(120deg, #f8fafc 80%, #e6eeff 100%);
+  padding-top: 46px;
+  position: relative;
+  background: linear-gradient(120deg, #f7fafd 80%, #e5e9f7 100%);
+  overflow: hidden;
 }
-.account-card-finance {
-  width: 540px;
-  min-height: 440px;
+
+/* 蓝色光斑装饰 */
+.bg-gradient-blob {
+  position: absolute;
+  top: -120px;
+  right: -120px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle at 40% 40%, #9fd4ffcc 0%, #e9e1ff00 70%);
+  opacity: 0.6;
+  z-index: 1;
+  pointer-events: none;
+}
+/* 金色条纹装饰 */
+.bg-gold-decoration {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 120vw;
+  height: 38px;
+  background: linear-gradient(90deg, #fffde4 0%, #ffd700 40%, #fffde4 100%);
+  opacity: 0.13;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.glass-card {
+  backdrop-filter: blur(16px);
+  background: rgba(255,255,255,0.78);
+  box-shadow: 0 10px 48px 0 rgba(25,118,210,0.14), 0 2.5px 14px 0 rgba(255,215,0,0.09);
   border-radius: 32px;
+  border: 1.5px solid #e3e8fd99;
+  position: relative;
+  z-index: 2;
+}
+
+.account-card-finance {
+  width: 560px;
+  min-height: 440px;
   padding: 32px 36px 28px 36px;
-  box-shadow: 0 14px 38px rgba(25,118,210,0.13);
   display: flex;
   flex-direction: column;
 }
+
 .finance-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 26px;
+  margin-bottom: 22px;
 }
+
 .finance-title {
-  font-size: 1.32rem;
+  font-size: 1.34rem;
   font-weight: 700;
-  letter-spacing: 1.3px;
-  color: #273d71;
+  color: #253a74;
+  letter-spacing: 1.4px;
+  text-shadow: 0 2px 8px #e3eafc66;
 }
+
 .finance-action-group {
   display: flex;
   gap: 14px;
 }
+
 .icon-btn {
   background: #f6faff;
   color: #1976d2;
   border: none;
-  box-shadow: 0 2px 8px rgba(25,118,210,0.08);
-  transition: background 0.18s, color 0.18s, box-shadow 0.19s, transform 0.18s;
+  box-shadow: 0 2.5px 12px rgba(25,118,210,0.08);
+  transition: background 0.16s, color 0.16s, box-shadow 0.16s, transform 0.16s;
 }
 .icon-btn:hover {
   background: #e3f2fd;
   color: #1976d2;
   box-shadow: 0 4px 16px rgba(25,118,210,0.15);
-  transform: scale(1.1);
+  transform: scale(1.12);
 }
 
 .finance-main-content {
@@ -285,19 +347,21 @@ async function submitFaceReveal() {
   flex-direction: column;
   align-items: center;
 }
+
 .bank-card-section {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
-.bank-card-bg {
-  background: linear-gradient(120deg, #193c62 68%, #4870d3 100%);
-  border-radius: 20px;
+
+.bank-card-bg-glass {
+  background: linear-gradient(120deg, #193c62cc 68%, #4870d3cc 100%);
+  border-radius: 24px;
   color: #fff;
-  padding: 22px 28px 16px 28px;
-  box-shadow: 0 8px 32px rgba(25,118,210,0.15);
-  min-width: 300px;
+  padding: 26px 34px 22px 34px;
+  box-shadow: 0 8px 32px rgba(25,118,210,0.17);
+  min-width: 320px;
   max-width: 420px;
   width: 100%;
   position: relative;
@@ -305,7 +369,10 @@ async function submitFaceReveal() {
   border: 2px solid #eaefff;
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 12px;
+  backdrop-filter: blur(10px);
+  /* 内阴影增加层次 */
+  box-shadow: 0 4px 24px rgba(25,118,210,0.13), 0 0px 0px 10px #fff1 inset;
 }
 .bank-logo-title {
   display: flex;
@@ -314,11 +381,11 @@ async function submitFaceReveal() {
   font-size: 1.1rem;
   font-weight: 700;
   font-family: 'Noto Sans SC', 'Segoe UI', Arial, sans-serif;
-  margin-bottom: 6px;
+  margin-bottom: 7px;
 }
 .bank-logo {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   background: url("https://api.dicebear.com/7.x/bottts/svg?seed=bank") center/cover no-repeat;
   border-radius: 50%;
   border: 2px solid #fff;
@@ -326,7 +393,9 @@ async function submitFaceReveal() {
 }
 .bank-title {
   color: #fff;
+  letter-spacing: 1px;
 }
+
 .bank-card-info-row {
   display: flex;
   align-items: center;
@@ -334,24 +403,44 @@ async function submitFaceReveal() {
   margin-bottom: 2px;
   margin-top: 2px;
 }
+
 .bank-card-label {
-  font-size: 0.98rem;
+  font-size: 1.02rem;
   font-weight: 600;
   color: #e3f2fd;
 }
 .bank-card-value {
-  font-size: 1.35rem;
+  font-size: 1.38rem;
   font-family: 'JetBrains Mono', 'Consolas', monospace;
   font-weight: 700;
   letter-spacing: 1px;
-  margin-left: 6px;
+  margin-left: 8px;
+  text-shadow: 0 2px 8px #fff3;
+  position: relative;
 }
+.balance-crown {
+  width: 22px;
+  height: 22px;
+  margin-left: 2px;
+  vertical-align: middle;
+  position: absolute;
+  top: -10px;
+  right: -24px;
+  animation: crown-bounce 1.2s infinite;
+}
+@keyframes crown-bounce {
+  0% { transform: translateY(0);}
+  30% { transform: translateY(-3px);}
+  50% { transform: translateY(0);}
+  100% { transform: translateY(0);}
+}
+
 .bank-card-number {
-  font-size: 1.1rem;
+  font-size: 1.12rem;
   font-family: 'JetBrains Mono', 'Consolas', monospace;
   font-weight: 600;
   color: #fff;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.13em;
   display: flex;
   align-items: center;
   margin-left: 8px;
@@ -369,29 +458,50 @@ async function submitFaceReveal() {
   box-shadow: 0 2px 8px rgba(25,118,210,0.16);
 }
 
+
 .finance-detail-section-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
-  margin-top: 10px;
-  padding: 0 8px;
+  margin-top: 6px;
+  padding: 0 4px;
+  background: #f7fafd;
+  border-radius: 16px;
+  box-shadow: 0 1px 9px #e3eafc77;
+  border: 1px solid #e3e8fd44;
 }
 .detail-item {
   flex: 1;
   text-align: center;
+  padding: 14px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 .detail-label {
-  font-size: 1.02rem;
+  font-size: 1.07rem;
   font-weight: 600;
   color: #1976d2;
   margin-bottom: 4px;
+  letter-spacing: 0.4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .detail-value {
-  font-size: 1.09rem;
+  font-size: 1.13rem;
   font-family: 'JetBrains Mono', 'Consolas', monospace;
   font-weight: 700;
   color: #273d71;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 6px #e3eafc44;
+}
+.vertical-divider {
+  width: 1.5px;
+  background: linear-gradient(to bottom, #e3e8fd 0%, #f7fafd 100%);
+  margin: 0 4px;
+  border-radius: 2px;
 }
 
 .face-video-box {
@@ -415,5 +525,14 @@ async function submitFaceReveal() {
   align-items: center;
   gap: 32px;
   margin-top: 18px;
+}
+
+/* 小动画让余额数字渐变显示（模拟，实际可用第三方组件做数值动画） */
+.animate-balance {
+  animation: fadeInUp 0.7s;
+}
+@keyframes fadeInUp {
+  0% { opacity:0; transform:translateY(12px);}
+  100% { opacity:1; transform:translateY(0);}
 }
 </style>
