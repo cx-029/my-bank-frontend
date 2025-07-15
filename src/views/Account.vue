@@ -1,27 +1,66 @@
 <template>
-  <div class="account-page">
-    <el-card class="account-card" shadow="always">
-      <h2>账户管理</h2>
-      <el-descriptions v-if="account" :column="1" border>
-        <el-descriptions-item label="账户ID">{{ account.id }}</el-descriptions-item>
-        <el-descriptions-item label="账户类型">{{ account.accountType }}</el-descriptions-item>
-        <el-descriptions-item label="账户状态">{{ account.status }}</el-descriptions-item>
-        <el-descriptions-item label="账户余额">{{ account.balance }}</el-descriptions-item>
-        <el-descriptions-item label="银行卡号">
-          <span v-if="!showAccountNumber">************</span>
-          <span v-else>{{ accountNumber }}</span>
-          <el-button
-              type="primary"
-              v-if="!showAccountNumber"
-              @click="openFaceDialog"
-              size="small"
-              style="margin-left:12px;"
-          >人脸识别查看</el-button>
-        </el-descriptions-item>
-      </el-descriptions>
-      <div style="margin-top:24px;">
-        <el-button type="primary" @click="isEdit=true">编辑账户信息</el-button>
-        <el-button type="default" @click="refreshAccount" style="margin-left:12px;">刷新</el-button>
+  <div class="account-page-finance">
+    <el-card class="account-card-finance" shadow="always">
+      <!-- 顶部按钮行 -->
+      <div class="finance-header-row">
+        <span class="finance-title">我的账户</span>
+        <div class="finance-action-group">
+          <el-button circle @click="goHome" class="icon-btn" aria-label="退出">
+            <el-icon><Close /></el-icon>
+          </el-button>
+          <el-button circle @click="isEdit=true" class="icon-btn" aria-label="编辑">
+            <el-icon><Edit /></el-icon>
+          </el-button>
+          <el-button circle @click="refreshAccount" class="icon-btn" aria-label="刷新">
+            <el-icon><Refresh /></el-icon>
+          </el-button>
+        </div>
+      </div>
+      <div class="finance-main-content">
+        <div class="bank-card-section">
+          <div class="bank-card-bg">
+            <div class="bank-logo-title">
+              <span class="bank-logo"></span>
+              <span class="bank-title">MyBank 金融账户</span>
+            </div>
+            <div class="bank-card-info-row">
+              <span class="bank-card-label">余额</span>
+              <span class="bank-card-value">￥{{ account?.balance ?? '--' }}</span>
+            </div>
+            <div class="bank-card-info-row">
+              <span class="bank-card-label">银行卡号</span>
+              <span class="bank-card-number">
+                <span v-if="!showAccountNumber">**** **** **** {{ account?.id ? (account.id+'').slice(-4) : '****' }}</span>
+                <span v-else>{{ accountNumber }}</span>
+                <el-button
+                    v-if="!showAccountNumber"
+                    circle
+                    class="id-reveal-btn"
+                    @click="openFaceDialog"
+                    aria-label="人脸识别查看"
+                    style="margin-left:8px;"
+                >
+                  <el-icon><View /></el-icon>
+                </el-button>
+              </span>
+            </div>
+          </div>
+        </div>
+        <!-- 三个信息平铺一行 -->
+        <div class="finance-detail-section-row">
+          <div class="detail-item">
+            <div class="detail-label">账户ID</div>
+            <div class="detail-value">{{ account?.id ?? '-' }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">账户类型</div>
+            <div class="detail-value">{{ account?.accountType ?? '-' }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">账户状态</div>
+            <div class="detail-value">{{ account?.status ?? '-' }}</div>
+          </div>
+        </div>
       </div>
     </el-card>
 
@@ -42,7 +81,6 @@
           <el-input v-model="editForm.balance" type="number" />
         </el-form-item>
         <el-form-item label="银行卡号">
-          <!-- 不预填旧卡号，只让用户输入新卡号 -->
           <el-input v-model="editForm.accountNumber" placeholder="如需更换请输入新卡号" />
         </el-form-item>
       </el-form>
@@ -80,7 +118,10 @@
 import { ref, onMounted, nextTick } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { Edit, Refresh, Close, View } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const account = ref(null)
 const accountNumber = ref('')
 const showAccountNumber = ref(false)
@@ -92,12 +133,15 @@ const faceImage = ref('')
 const stream = ref(null)
 const videoRef = ref(null)
 
+function goHome() {
+  router.push('/home')
+}
+
 async function loadAccount() {
   try {
     const res = await axios.get('/api/account')
     account.value = res.data
     editForm.value = { ...account.value }
-    // 关键：不预填银行卡号，只是空字符串
     editForm.value.accountNumber = ''
     showAccountNumber.value = false
     accountNumber.value = ''
@@ -178,6 +222,7 @@ async function submitFaceReveal() {
       ElMessage.success('识别成功，已显示银行卡号')
     } else {
       ElMessage.error('识别失败')
+      faceDialogVisible.value = false
     }
   } catch (e) {
     ElMessage.error('人脸识别请求失败')
@@ -187,7 +232,7 @@ async function submitFaceReveal() {
 </script>
 
 <style scoped>
-.account-page {
+.account-page-finance {
   width: 100vw;
   min-height: 100vh;
   display: flex;
@@ -196,13 +241,159 @@ async function submitFaceReveal() {
   padding-top: 56px;
   background: linear-gradient(120deg, #f8fafc 80%, #e6eeff 100%);
 }
-.account-card {
-  width: 480px;
-  min-height: 340px;
-  border-radius: 28px;
-  padding: 36px 32px 24px 32px;
-  box-shadow: 0 12px 36px rgba(25,118,210,0.11);
+.account-card-finance {
+  width: 540px;
+  min-height: 440px;
+  border-radius: 32px;
+  padding: 32px 36px 28px 36px;
+  box-shadow: 0 14px 38px rgba(25,118,210,0.13);
+  display: flex;
+  flex-direction: column;
 }
+.finance-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 26px;
+}
+.finance-title {
+  font-size: 1.32rem;
+  font-weight: 700;
+  letter-spacing: 1.3px;
+  color: #273d71;
+}
+.finance-action-group {
+  display: flex;
+  gap: 14px;
+}
+.icon-btn {
+  background: #f6faff;
+  color: #1976d2;
+  border: none;
+  box-shadow: 0 2px 8px rgba(25,118,210,0.08);
+  transition: background 0.18s, color 0.18s, box-shadow 0.19s, transform 0.18s;
+}
+.icon-btn:hover {
+  background: #e3f2fd;
+  color: #1976d2;
+  box-shadow: 0 4px 16px rgba(25,118,210,0.15);
+  transform: scale(1.1);
+}
+
+.finance-main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.bank-card-section {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+.bank-card-bg {
+  background: linear-gradient(120deg, #193c62 68%, #4870d3 100%);
+  border-radius: 20px;
+  color: #fff;
+  padding: 22px 28px 16px 28px;
+  box-shadow: 0 8px 32px rgba(25,118,210,0.15);
+  min-width: 300px;
+  max-width: 420px;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #eaefff;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.bank-logo-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: 'Noto Sans SC', 'Segoe UI', Arial, sans-serif;
+  margin-bottom: 6px;
+}
+.bank-logo {
+  width: 28px;
+  height: 28px;
+  background: url("https://api.dicebear.com/7.x/bottts/svg?seed=bank") center/cover no-repeat;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(25,118,210,0.14);
+}
+.bank-title {
+  color: #fff;
+}
+.bank-card-info-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 2px;
+  margin-top: 2px;
+}
+.bank-card-label {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #e3f2fd;
+}
+.bank-card-value {
+  font-size: 1.35rem;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-left: 6px;
+}
+.bank-card-number {
+  font-size: 1.1rem;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.12em;
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+}
+.id-reveal-btn {
+  background: #e3f2fd;
+  color: #1976d2;
+  box-shadow: 0 2px 8px rgba(25,118,210,0.08);
+  border: none;
+  transition: background 0.19s, color 0.19s, box-shadow 0.19s;
+}
+.id-reveal-btn:hover {
+  background: #b3e5fc;
+  color: #1565c0;
+  box-shadow: 0 2px 8px rgba(25,118,210,0.16);
+}
+
+.finance-detail-section-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 10px;
+  padding: 0 8px;
+}
+.detail-item {
+  flex: 1;
+  text-align: center;
+}
+.detail-label {
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: #1976d2;
+  margin-bottom: 4px;
+}
+.detail-value {
+  font-size: 1.09rem;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-weight: 700;
+  color: #273d71;
+}
+
 .face-video-box {
   display: flex;
   align-items: center;
