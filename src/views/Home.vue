@@ -191,7 +191,9 @@ const handleMenuSelect = (index) => {
     router.push('/profile')
   } else if (index === 'account') {
     router.push('/account')
-  } else {
+  } else if (index === 'deposit') {
+    router.push('/deposit')
+  }else {
     ElMessage.info(`【${menuName(index)}】功能开发中`)
   }
 }
