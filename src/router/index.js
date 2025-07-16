@@ -6,6 +6,7 @@ import Admin from '../views/Admin.vue'
 import Profile from "@/views/Profile.vue"
 import Account from "../views/Account.vue"
 import Deposit from "../views/Deposit.vue"
+import Loss from "../views/Loss.vue"
 
 const routes = [
     { path: '/register', component: Register },
@@ -16,7 +17,8 @@ const routes = [
     { path: '/account', component: Account }, // 账户管理页面路由
     { path: '/', redirect: '/login' },
     { path: '/:pathMatch(.*)*', redirect: '/login' },
-    { path: '/deposit', component: Deposit }
+    { path: '/deposit', component: Deposit },
+    { path: '/loss', component: Loss }
 ]
 
 const router = createRouter({

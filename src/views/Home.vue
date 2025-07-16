@@ -217,6 +217,8 @@ const handleMenuSelect = async (index) => {
     router.push('/profile');
   } else if (index === 'account') {
     router.push('/account');
+  }else if (index === 'loss'){
+    router.push('/loss');
   } else {
     ElMessage.info(`【${menuName(index)}】功能开发中`);
   }
