@@ -18,7 +18,18 @@ const routes = [
     { path: '/', redirect: '/login' },
     { path: '/:pathMatch(.*)*', redirect: '/login' },
     { path: '/deposit', component: Deposit },
-    { path: '/loss', component: Loss }
+    { path: '/loss', component: Loss },
+    {
+        path: '/notifications',
+        name: 'NotificationList',
+        component: () => import('@/views/NotificationList.vue')
+    },
+    {
+        path: '/notifications/:id',
+        name: 'NotificationDetail',
+        component: () => import('@/views/NotificationDetail.vue'),
+        props: true
+    }
 ]
 
 const router = createRouter({

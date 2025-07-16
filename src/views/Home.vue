@@ -234,6 +234,8 @@ const handleMenuSelect = (index) => {
     router.push('/profile')
   } else if (index === 'account') {
     router.push('/account')
+  }else if (index === 'notice'){
+    router.push('/notifications')
   } else {
     ElMessage.info(`【${menuName(index)}】功能开发中`)
   }
