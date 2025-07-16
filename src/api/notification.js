@@ -1,4 +1,4 @@
-import request from '@/utils/request' // 你项目内封装的axios
+import request from '@/utils/request'
 
 // 获取通知列表
 export function getNotifications() {
@@ -24,12 +24,12 @@ export function getNotificationComments(id) {
     })
 }
 
-// 新增评论
-export function postNotificationComment(id, userId, comment) {
+// 新增评论（只传 comment）
+export function postNotificationComment(id, comment) {
     return request({
         url: `/notifications/${id}/comments`,
         method: 'post',
-        data: { userId, comment }
+        data: { comment }
     })
 }
 
@@ -41,19 +41,18 @@ export function getNotificationLikes(id) {
     })
 }
 
-// 点赞
-export function likeNotification(id, userId) {
+// 点赞（不传 userId）
+export function likeNotification(id) {
     return request({
         url: `/notifications/${id}/likes`,
-        method: 'post',
-        data: { userId }
+        method: 'post'
     })
 }
 
-// 查询用户是否已点赞
-export function hasUserLiked(id, userId) {
+// 查询用户是否已点赞（不传 userId，后端自动识别当前用户）
+export function hasUserLiked(id) {
     return request({
-        url: `/notifications/${id}/likes/${userId}`,
+        url: `/notifications/${id}/likes/me`,
         method: 'get'
     })
 }

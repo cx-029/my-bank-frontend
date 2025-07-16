@@ -1,3 +1,65 @@
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import {
+  getNotificationDetail,
+  getNotificationComments,
+  postNotificationComment,
+  getNotificationLikes,
+  likeNotification,
+  hasUserLiked
+} from '@/api/notification'
+
+// 不再需要 userId
+// const userId = Number(localStorage.getItem('userId') || 1)
+
+const route = useRoute()
+const notification = ref(null)
+const comments = ref([])
+const likeCount = ref(0)
+const liked = ref(false)
+const comment = ref('')
+
+const fetchDetail = async () => {
+  const res = await getNotificationDetail(route.params.id)
+  notification.value = res.data
+}
+const fetchComments = async () => {
+  const res = await getNotificationComments(route.params.id)
+  comments.value = res.data
+}
+const fetchLikes = async () => {
+  const res = await getNotificationLikes(route.params.id)
+  likeCount.value = res.data
+}
+const checkLiked = async () => {
+  const res = await hasUserLiked(route.params.id)
+  liked.value = res.data
+}
+const handleLike = async () => {
+  await likeNotification(route.params.id)
+  fetchLikes()
+  liked.value = true
+}
+const submitComment = async () => {
+  if (!comment.value.trim()) return
+  await postNotificationComment(route.params.id, comment.value)
+  comment.value = ''
+  fetchComments()
+}
+
+function formatDate(val) {
+  return val ? new Date(val).toLocaleString() : ''
+}
+
+onMounted(() => {
+  fetchDetail()
+  fetchComments()
+  fetchLikes()
+  checkLiked()
+})
+</script>
+
 <template>
   <el-card v-if="notification">
     <h2>{{ notification.title }}</h2>
@@ -34,65 +96,3 @@
     <el-empty v-else description="暂无评论"/>
   </el-card>
 </template>
-
-<script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import {
-  getNotificationDetail,
-  getNotificationComments,
-  postNotificationComment,
-  getNotificationLikes,
-  likeNotification,
-  hasUserLiked
-} from '@/api/notification'
-
-// 假设用户id从全局状态或localStorage里获取
-const userId = Number(localStorage.getItem('userId') || 1)
-
-const route = useRoute()
-const notification = ref(null)
-const comments = ref([])
-const likeCount = ref(0)
-const liked = ref(false)
-const comment = ref('')
-
-const fetchDetail = async () => {
-  const res = await getNotificationDetail(route.params.id)
-  notification.value = res.data
-}
-const fetchComments = async () => {
-  const res = await getNotificationComments(route.params.id)
-  comments.value = res.data
-}
-const fetchLikes = async () => {
-  const res = await getNotificationLikes(route.params.id)
-  likeCount.value = res.data
-}
-const checkLiked = async () => {
-  const res = await hasUserLiked(route.params.id, userId)
-  liked.value = res.data
-}
-const handleLike = async () => {
-  await likeNotification(route.params.id, userId)
-  fetchLikes()
-  liked.value = true
-}
-const submitComment = async () => {
-  if (!comment.value.trim()) return
-  await postNotificationComment(route.params.id, userId, comment.value)
-  comment.value = ''
-  fetchComments()
-}
-
-function formatDate(val) {
-  return val ? new Date(val).toLocaleString() : ''
-}
-
-onMounted(() => {
-  fetchDetail()
-  fetchComments()
-  fetchLikes()
-  checkLiked()
-})
-</script>
