@@ -49,6 +49,14 @@ export function likeNotification(id) {
     })
 }
 
+// 取消点赞
+export function unlikeNotification(id) {
+    return request({
+        url: `/notifications/${id}/likes`,
+        method: 'delete'
+    })
+}
+
 // 查询用户是否已点赞（不传 userId，后端自动识别当前用户）
 export function hasUserLiked(id) {
     return request({

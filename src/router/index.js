@@ -11,7 +11,7 @@ import Loss from "../views/Loss.vue"
 const routes = [
     { path: '/register', component: Register },
     { path: '/login', component: Login },
-    { path: '/home', component: Home },
+    { path: '/home', name: 'Home', component: Home }, // ★ 增加了name属性
     { path: '/admin', component: Admin },
     { path: '/profile', component: Profile },
     { path: '/account', component: Account }, // 账户管理页面路由
