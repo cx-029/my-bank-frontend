@@ -1,8 +1,8 @@
 <template>
   <el-card class="notification-detail-card" v-if="notification">
-    <!-- 右上角关闭按钮（美观叉叉+气泡提示） -->
-    <el-tooltip content="关闭" placement="left">
-      <button class="close-btn" @click="closeDetail" aria-label="关闭">
+    <!-- 右上角关闭按钮（蓝白美观叉叉+气泡提示） -->
+    <el-tooltip content="返回公告列表" placement="left">
+      <button class="close-btn" @click="closeDetail" aria-label="返回公告列表">
         <svg viewBox="0 0 20 20" class="close-icon" aria-hidden="true">
           <line x1="5" y1="5" x2="15" y2="15" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
           <line x1="15" y1="5" x2="5" y2="15" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
@@ -51,11 +51,14 @@
       </el-form>
       <div class="comment-list-outer">
         <div v-if="comments.length" class="comment-list">
-          <div v-for="item in comments" :key="item.id" class="comment-item">
-            <span class="comment-user">用户{{ item.userId }}</span>
-            <span class="comment-content">{{ item.comment }}</span>
-            <span class="comment-date">{{ formatDate(item.createdAt) }}</span>
-          </div>
+          <CommentItem
+              v-for="item in comments"
+              :key="item.id"
+              :comment="item"
+              :notification-id="notification.id"
+              :current-user-id="currentUserId"
+              @deleted="fetchComments"
+          />
         </div>
         <el-empty v-else description="暂无评论" />
       </div>
@@ -73,8 +76,10 @@ import {
   getNotificationLikes,
   likeNotification,
   unlikeNotification,
-  hasUserLiked
+  hasUserLiked,
 } from '@/api/notification'
+import { getMe } from '@/api/user' // 你需要实现该接口用于获取当前用户信息
+import CommentItem from './CommentItem.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -83,6 +88,7 @@ const comments = ref([])
 const likeCount = ref(0)
 const liked = ref(false)
 const comment = ref('')
+const currentUserId = ref(null)
 
 const fetchDetail = async () => {
   const res = await getNotificationDetail(route.params.id)
@@ -99,6 +105,10 @@ const fetchLikes = async () => {
 const checkLiked = async () => {
   const res = await hasUserLiked(route.params.id)
   liked.value = res.data
+}
+const fetchUserInfo = async () => {
+  const res = await getMe()
+  currentUserId.value = res.data?.id || null
 }
 const handleLike = async () => {
   if (!liked.value) {
@@ -128,10 +138,12 @@ onMounted(() => {
   fetchComments()
   fetchLikes()
   checkLiked()
+  fetchUserInfo()
 })
 </script>
 
 <style scoped>
+/* 样式同原文件保持不变 */
 .notification-detail-card {
   max-width: 740px;
   margin: 48px auto 0 auto;
@@ -166,16 +178,20 @@ onMounted(() => {
   border: none;
   outline: none;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff5f5f 0%, #fbc02d 100%);
-  box-shadow: 0 2px 12px rgba(229,57,53,0.13);
+  background: linear-gradient(135deg,#1976d2 0%,#65b3fe 100%);
+  box-shadow: 0 2px 12px rgba(33,100,220,0.13);
   transition: background 0.25s, box-shadow 0.22s, transform 0.18s;
   cursor: pointer;
   padding: 0;
 }
 .close-btn:hover {
-  background: linear-gradient(135deg, #fbc02d 0%, #ff5f5f 100%);
-  box-shadow: 0 6px 18px rgba(229,57,53,0.18);
+  background: linear-gradient(135deg,#1565c0 0%,#47a3f3 100%);
+  box-shadow: 0 6px 18px rgba(33,100,220,0.18);
   transform: scale(1.09) rotate(-8deg);
+}
+.close-btn:active {
+  transform: scale(0.92) rotate(-8deg);
+  box-shadow: 0 1px 4px #1565c0a0;
 }
 
 .close-icon {

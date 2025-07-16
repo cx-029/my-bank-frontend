@@ -25,11 +25,13 @@ export function getNotificationComments(id) {
 }
 
 // 新增评论（只传 comment）
-export function postNotificationComment(id, comment) {
+export function postNotificationComment(id, comment, parentId = null) {
+    const data = { comment }
+    if (parentId !== null) data.parentId = parentId
     return request({
         url: `/notifications/${id}/comments`,
         method: 'post',
-        data: { comment }
+        data
     })
 }
 
@@ -61,6 +63,54 @@ export function unlikeNotification(id) {
 export function hasUserLiked(id) {
     return request({
         url: `/notifications/${id}/likes/me`,
+        method: 'get'
+    })
+}
+
+// 删除评论
+export function deleteNotificationComment(commentId) {
+    return request({
+        url: `/notifications/comments/${commentId}`,
+        method: 'delete'
+    })
+}
+
+// 获取评论的回复（子评论）
+export function getCommentReplies(parentId) {
+    return request({
+        url: `/notifications/comments/${parentId}/replies`,
+        method: 'get'
+    })
+}
+
+// 评论点赞
+export function likeComment(commentId) {
+    return request({
+        url: `/notifications/comments/${commentId}/likes`,
+        method: 'post'
+    })
+}
+
+// 取消评论点赞
+export function unlikeComment(commentId) {
+    return request({
+        url: `/notifications/comments/${commentId}/likes`,
+        method: 'delete'
+    })
+}
+
+// 查询评论点赞数
+export function getCommentLikeCount(commentId) {
+    return request({
+        url: `/notifications/comments/${commentId}/likes`,
+        method: 'get'
+    })
+}
+
+// 查询用户是否已点赞评论
+export function hasUserLikedComment(commentId) {
+    return request({
+        url: `/notifications/comments/${commentId}/likes/me`,
         method: 'get'
     })
 }
