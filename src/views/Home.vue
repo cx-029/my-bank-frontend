@@ -85,9 +85,11 @@
     </aside>
 
     <!-- 人脸识别弹窗 -->
-    <el-dialog v-model="showFaceDialog" title="人脸识别验证" width="420px" center>
+    <el-dialog v-model="showFaceDialog" :title="null" width="420px" center>
       <div class="face-dialog-content">
-        <div class="face-title">请进行人脸识别，以进入存取管理</div>
+        <div class="face-title" style="margin-bottom: 20px; text-align: center; width: 100%; font-size: 1.16rem; font-weight: 600;">
+          {{ faceDialogTitle }}
+        </div>
         <div class="face-preview">
           <video ref="videoRef" class="face-video" autoplay playsinline width="320" height="240"></video>
           <canvas ref="canvasRef" style="display:none;" width="320" height="240"></canvas>
@@ -174,7 +176,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
@@ -191,11 +193,23 @@ const aiInputRef = ref(null)
 const showAvatarAnim = ref(true)
 const chatList = ref([])
 
+// 人脸识别相关
 const showFaceDialog = ref(false)
 const faceLoading = ref(false)
 const faceError = ref('')
 const videoRef = ref(null)
 const canvasRef = ref(null)
+const faceNextRoute = ref('')
+
+// 动态弹窗标题
+const faceDialogTitle = computed(() => {
+  if (faceNextRoute.value === '/deposit') {
+    return '请进行人脸识别，以进入存取管理'
+  } else if (faceNextRoute.value === '/loss') {
+    return '请进行人脸识别，以进入挂失管理'
+  }
+  return '请进行人脸识别'
+})
 
 const logout = () => {
   localStorage.removeItem('token')
@@ -208,21 +222,23 @@ const goProfile = () => {
   router.push('/profile')
 }
 
-const handleMenuSelect = async (index) => {
-  activeMenu.value = index;
+const handleMenuSelect = (index) => {
+  activeMenu.value = index
   if (index === 'deposit') {
-    // 直接弹出人脸识别弹窗
-    openFaceDialog();
+    faceNextRoute.value = '/deposit'
+    openFaceDialog()
+  } else if (index === 'loss') {
+    faceNextRoute.value = '/loss'
+    openFaceDialog()
   } else if (index === 'profile') {
-    router.push('/profile');
+    router.push('/profile')
   } else if (index === 'account') {
-    router.push('/account');
-  }else if (index === 'loss'){
-    router.push('/loss');
+    router.push('/account')
   } else {
-    ElMessage.info(`【${menuName(index)}】功能开发中`);
+    ElMessage.info(`【${menuName(index)}】功能开发中`)
   }
 }
+
 const menuName = (index) =>
     ({
       profile: '个人中心',
@@ -272,7 +288,6 @@ const openFaceDialog = async () => {
   showFaceDialog.value = true
   await nextTick()
   try {
-    // 调用摄像头
     const stream = await navigator.mediaDevices.getUserMedia({ video: true })
     if (videoRef.value) {
       videoRef.value.srcObject = stream
@@ -285,6 +300,7 @@ const closeFaceDialog = () => {
   showFaceDialog.value = false
   stopCamera()
   faceError.value = ''
+  // faceNextRoute.value = ''  // 不要在这里清空
 }
 function stopCamera() {
   if (videoRef.value && videoRef.value.srcObject) {
@@ -297,18 +313,22 @@ const captureFace = async () => {
   faceError.value = ''
   faceLoading.value = true
   try {
-    // 截取摄像头当前画面
     const video = videoRef.value
     const canvas = canvasRef.value
     const ctx = canvas.getContext('2d')
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     const base64Image = canvas.toDataURL('image/jpeg')
-    // 后端接口识别人脸
     const res = await axios.post('/api/account/face-verify', { image: base64Image })
     if (res.data && res.data.success) {
-      ElMessage.success('人脸识别成功，已进入存取管理')
+      ElMessage.success('人脸识别成功')
+      const route = faceNextRoute.value
       closeFaceDialog()
-      router.push('/deposit')
+      if (route) {
+        nextTick(() => {
+          router.push(route)
+          faceNextRoute.value = ''
+        })
+      }
     } else {
       faceError.value = res.data.error || '人脸识别失败，请确保正对摄像头并重试'
     }
@@ -318,7 +338,6 @@ const captureFace = async () => {
     faceLoading.value = false
   }
 }
-
 onMounted(async () => {
   showAvatarAnim.value = true
   try {
@@ -855,6 +874,8 @@ onMounted(async () => {
   color: #1976d2;
   margin-bottom: 14px;
   letter-spacing: 1px;
+  text-align: center;
+  width: 100%;
 }
 .face-preview {
   margin-bottom: 16px;
