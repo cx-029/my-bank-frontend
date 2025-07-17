@@ -7,6 +7,7 @@ import Profile from "@/views/Profile.vue"
 import Account from "../views/Account.vue"
 import Deposit from "../views/Deposit.vue"
 import Loss from "../views/Loss.vue"
+import AdminProfile from "@/views/AdminProfile.vue";
 
 const routes = [
     { path: '/register', component: Register },
@@ -18,6 +19,7 @@ const routes = [
     { path: '/', redirect: '/login' },
     { path: '/:pathMatch(.*)*', redirect: '/login' },
     { path: '/deposit', component: Deposit },
+    { path: '/admin/profile', component: AdminProfile },
     { path: '/loss', component: Loss },
     {
         path: '/notifications',

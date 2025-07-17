@@ -157,26 +157,33 @@ const activeMenu = ref('profile')
 const adminName = ref('管理员')
 const adminAvatar = ref('https://api.dicebear.com/7.x/identicon/svg?seed=admin')
 
-const logout = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('role')
-  ElMessage.success('已退出登录')
-  router.push('/login')
-}
+// 侧边栏菜单点击跳转
 const handleMenuSelect = (index) => {
   activeMenu.value = index
-  goPage(index)
-}
-const goPage = (index) => {
   switch (index) {
-    case 'profile': router.push('/admin/profile'); break;
-    case 'account': router.push('/admin/account'); break;
-    case 'customer': router.push('/admin/users'); break;
-    case 'deposit': router.push('/admin/deposit'); break;
-    case 'loss': router.push('/admin/loss'); break;
-    case 'notice': router.push('/admin/notifications'); break;
-    case 'settings': router.push('/admin/settings'); break;
-    default: ElMessage.info('功能开发中');
+    case 'profile':
+      router.push('/admin/profile')
+      break
+    case 'account':
+      router.push('/admin/account')
+      break
+    case 'customer':
+      router.push('/admin/users')
+      break
+    case 'deposit':
+      router.push('/admin/deposit')
+      break
+    case 'loss':
+      router.push('/admin/loss')
+      break
+    case 'notice':
+      router.push('/admin/notifications')
+      break
+    case 'settings':
+      router.push('/admin/settings')
+      break
+    default:
+      ElMessage.info('功能开发中')
   }
 }
 </script>
