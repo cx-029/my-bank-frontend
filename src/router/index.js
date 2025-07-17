@@ -22,6 +22,10 @@ const routes = [
     { path: '/admin/profile', component: AdminProfile },
     { path: '/loss', component: Loss },
     {
+        path: '/admin/loss',
+        component: () => import('@/views/AdminLoss.vue'), // 新建页面
+    },
+    {
         path: '/admin/deposit', // 存取管理页面路由
         component: () => import('@/views/AdminDeposit.vue'),
     },

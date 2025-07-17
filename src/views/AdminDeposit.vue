@@ -55,6 +55,14 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination
+          v-model:current-page="page"
+          :page-size="pageSize"
+          :total="total"
+          @current-change="handlePageChange"
+          layout="prev, pager, next"
+          style="margin-top: 20px;"
+      />
       <el-loading :fullscreen="false" :body="true" v-if="loading" />
     </el-card>
 
@@ -124,6 +132,9 @@ const transactions = ref([])
 const showAddDialog = ref(false)
 const showEditDialog = ref(false)
 const loading = ref(false)
+const page = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const queryForm = ref({
   accountId: '',
   type: ''
@@ -140,13 +151,25 @@ const editForm = ref({
   description: ''
 })
 
-// 查询流水（不分页，按条件过滤）
+// 分页查询流水
 const searchTransaction = async () => {
   try {
     loading.value = true
-    const params = { ...queryForm.value }
+    // 前端只传 page: page.value，不做减一
+    const params = {
+      ...queryForm.value,
+      page: page.value,
+      size: pageSize.value
+    }
     const res = await axios.get('/api/admin/transactions', { params })
-    transactions.value = res.data.content || res.data || []
+    // 兼容后端分页返回格式
+    if (res.data.content) {
+      transactions.value = res.data.content
+      total.value = res.data.totalElements
+    } else {
+      transactions.value = res.data || []
+      total.value = transactions.value.length
+    }
   } catch {
     ElMessage.error('查询失败')
   } finally {
@@ -154,8 +177,13 @@ const searchTransaction = async () => {
   }
 }
 onMounted(searchTransaction)
+const handlePageChange = (val) => {
+  page.value = Math.max(1, val)
+  searchTransaction()
+}
 const resetQuery = () => {
   queryForm.value = { accountId: '', type: '' }
+  page.value = 1
   searchTransaction()
 }
 
@@ -229,13 +257,14 @@ const goBack = () => {
 
 <style scoped>
 .admin-deposit-page {
-  max-width: 1100px;
-  margin: 32px auto;
+  padding: 36px;
+  max-width: none;
+  margin: 0;
 }
 .deposit-card {
-  padding: 24px;
-  border-radius: 18px;
-  box-shadow: 0 2px 12px #e3eafc;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #e3eafc;
+  padding: 0;
 }
 .deposit-header {
   display: flex;
@@ -245,7 +274,7 @@ const goBack = () => {
   position: relative;
 }
 .deposit-title {
-  font-size: 1.36rem;
+  font-size: 1.3em;
   font-weight: 700;
   color: #1976d2;
   letter-spacing: 1.2px;
@@ -283,7 +312,7 @@ const goBack = () => {
   stroke: #1976d2;
 }
 @media (max-width: 900px) {
-  .deposit-card { padding: 16px 2vw 12px 2vw; }
+  .admin-deposit-page { padding: 16px 2vw 12px 2vw; }
   .deposit-header { flex-direction: column; gap: 12px;}
   .deposit-title { font-size: 1.2rem;}
   .deposit-query-row { margin-bottom: 10px; }
