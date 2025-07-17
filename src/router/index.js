@@ -22,6 +22,10 @@ const routes = [
     { path: '/admin/profile', component: AdminProfile },
     { path: '/loss', component: Loss },
     {
+        path: '/admin/account',
+        component: () => import('@/views/AdminAccount.vue'),
+    },
+    {
         path: '/notifications',
         name: 'NotificationList',
         component: () => import('@/views/NotificationList.vue')
