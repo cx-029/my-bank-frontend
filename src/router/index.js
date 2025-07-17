@@ -22,6 +22,10 @@ const routes = [
     { path: '/admin/profile', component: AdminProfile },
     { path: '/loss', component: Loss },
     {
+        path: '/admin/notifications',
+        component: () => import('@/views/AdminNotificationList.vue')
+    },
+    {
         path: '/admin/loss',
         component: () => import('@/views/AdminLoss.vue'), // 新建页面
     },
