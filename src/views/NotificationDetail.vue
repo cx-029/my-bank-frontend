@@ -1,6 +1,5 @@
 <template>
-  <el-card class="notification-detail-card" v-if="notification">
-    <!-- 右上角关闭按钮（蓝白美观叉叉+气泡提示） -->
+  <el-card class="notification-detail-card">
     <el-tooltip content="返回公告列表" placement="left">
       <button class="close-btn" @click="closeDetail" aria-label="返回公告列表">
         <svg viewBox="0 0 20 20" class="close-icon" aria-hidden="true">
@@ -9,65 +8,76 @@
         </svg>
       </button>
     </el-tooltip>
-    <div class="card-inner">
-      <div class="header">
-        <h2 class="detail-title">{{ notification.title }}</h2>
-        <div class="meta">
-          <el-tag class="author">{{ notification.author }}</el-tag>
-          <span class="date">{{ formatDate(notification.createdAt) }}</span>
+    <div class="notification-layout">
+      <!-- 左侧：通知内容 -->
+      <div class="notification-left">
+        <div class="header">
+          <h2 class="detail-title">{{ notification?.title }}</h2>
+          <div class="meta">
+            <el-tag class="author">{{ notification?.author }}</el-tag>
+            <span class="date">{{ formatDate(notification?.createdAt) }}</span>
+          </div>
         </div>
-      </div>
-      <el-image
-          v-if="notification.imageUrl"
-          :src="notification.imageUrl"
-          class="detail-image"
-          fit="cover"
-      />
-      <div class="detail-content">
-        {{ notification.content }}
-      </div>
-      <div class="like-row">
-        <el-button
-            :type="liked ? 'danger' : 'primary'"
-            @click="handleLike"
-            size="large"
-            class="like-btn"
-        >
-          <span v-if="liked">已点赞（取消） {{ likeCount }}</span>
-          <span v-else>👍 点赞 {{ likeCount }}</span>
-        </el-button>
-      </div>
-      <el-divider />
-      <h3 class="comment-title">评论</h3>
-      <el-form class="comment-form" @submit.prevent="submitComment" inline>
-        <el-form-item class="comment-input-item">
-          <el-input v-model="comment" placeholder="请输入评论内容" size="large" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="submitComment" size="large">
-            评论
+        <el-image
+            v-if="notification?.imageUrl"
+            :src="notification.imageUrl"
+            class="detail-image"
+            fit="cover"
+        />
+        <div class="detail-content">{{ notification?.content }}</div>
+        <div class="like-row">
+          <el-button
+              :type="liked ? 'danger' : 'primary'"
+              @click="handleLike"
+              size="large"
+              class="like-btn"
+          >
+            <span v-if="liked">已点赞（取消） {{ likeCount }}</span>
+            <span v-else>👍 点赞 {{ likeCount }}</span>
           </el-button>
-        </el-form-item>
-      </el-form>
-      <div class="comment-list-outer">
-        <div v-if="comments.length" class="comment-list">
-          <CommentItem
-              v-for="item in comments"
-              :key="item.id"
-              :comment="item"
-              :notification-id="notification.id"
-              :current-user-id="currentUserId"
-              @deleted="fetchComments"
-          />
         </div>
-        <el-empty v-else description="暂无评论" />
+      </div>
+      <!-- 右侧：评论区 -->
+      <div class="notification-right">
+        <h3 class="comment-title">评论区</h3>
+        <el-form class="comment-form" @submit.prevent="submitComment" inline>
+          <el-form-item class="comment-input-item">
+            <el-input v-model="comment" placeholder="请输入评论内容" size="large" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="submitComment" size="large">评论</el-button>
+          </el-form-item>
+        </el-form>
+        <div class="comment-list-outer">
+          <div v-if="pagedComments.length" class="comment-list">
+            <CommentItem
+                v-for="item in pagedComments"
+                :key="item.id"
+                :comment="item"
+                :notification-id="notification?.id"
+                :current-user-id="currentUserId"
+                @deleted="fetchComments"
+            />
+          </div>
+          <el-empty v-else description="暂无评论" />
+        </div>
+        <el-pagination
+            v-if="comments.length > pageSize"
+            background
+            layout="prev, pager, next"
+            :total="comments.length"
+            :page-size="pageSize"
+            :current-page="currentPage"
+            @current-change="handlePageChange"
+            class="comment-pagination"
+        />
       </div>
     </div>
   </el-card>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   getNotificationDetail,
@@ -78,7 +88,7 @@ import {
   unlikeNotification,
   hasUserLiked,
 } from '@/api/notification'
-import { getMe } from '@/api/user' // 你需要实现该接口用于获取当前用户信息
+import { getMe } from '@/api/user'
 import CommentItem from './CommentItem.vue'
 
 const route = useRoute()
@@ -89,6 +99,17 @@ const likeCount = ref(0)
 const liked = ref(false)
 const comment = ref('')
 const currentUserId = ref(null)
+const pageSize = 4
+const currentPage = ref(1)
+
+const closeDetail = () => {
+  router.push({ name: 'NotificationList' });
+}
+
+const pagedComments = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return comments.value.slice(start, start + pageSize)
+})
 
 const fetchDetail = async () => {
   const res = await getNotificationDetail(route.params.id)
@@ -125,10 +146,9 @@ const submitComment = async () => {
   comment.value = ''
   fetchComments()
 }
-const closeDetail = () => {
-  router.push({ name: 'NotificationList' })
+const handlePageChange = (page) => {
+  currentPage.value = page
 }
-
 function formatDate(val) {
   return val ? new Date(val).toLocaleString() : ''
 }
@@ -143,42 +163,32 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 样式同原文件保持不变 */
 .notification-detail-card {
-  max-width: 740px;
-  margin: 48px auto 0 auto;
-  max-height: 92vh;
-  overflow: auto;
-  padding: 32px 40px 20px 40px;
+  max-width: 1100px;
+  margin: 38px auto 0 auto;
   border-radius: 18px;
-  box-shadow: 0 8px 32px rgba(40,80,160,0.11);
-  font-family: 'HarmonyOS Sans', 'PingFang SC', 'Microsoft YaHei', Arial, Helvetica, sans-serif;
+  box-shadow: 0 8px 32px rgba(40,80,160,0.09);
   background: #f7faff;
   position: relative;
   display: flex;
   flex-direction: column;
+  font-family: 'PingFang SC', 'Microsoft YaHei', Arial, Helvetica, sans-serif;
+  padding: 0;
 }
-
-.card-inner {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
 .close-btn {
   position: absolute;
-  top: 22px;
-  right: 22px;
+  top: 20px;
+  right: 28px;
   z-index: 10;
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   outline: none;
   border-radius: 50%;
-  background: linear-gradient(135deg,#1976d2 0%,#65b3fe 100%);
+  background: linear-gradient(135deg,#1558a0 0%,#65b3fe 100%);
   box-shadow: 0 2px 12px rgba(33,100,220,0.13);
   transition: background 0.25s, box-shadow 0.22s, transform 0.18s;
   cursor: pointer;
@@ -193,58 +203,76 @@ onMounted(() => {
   transform: scale(0.92) rotate(-8deg);
   box-shadow: 0 1px 4px #1565c0a0;
 }
-
 .close-icon {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   display: block;
 }
-
+.notification-layout {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  min-height: 520px;
+}
+.notification-left {
+  flex: 1.1;
+  padding: 44px 38px 30px 44px;
+  border-right: 2px solid #e2e8f0;
+  min-width: 380px;
+  background: #fbfdff;
+  display: flex;
+  flex-direction: column;
+}
+.notification-right {
+  flex: 1;
+  padding: 32px 30px 22px 34px;
+  background: #f7faff;
+  min-width: 380px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
 .header {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 .detail-title {
-  font-size: 2.3rem;
-  font-weight: 800;
+  font-size: 2.1rem;
+  font-weight: 700;
   color: #133b66;
-  margin-bottom: 8px;
+  margin-bottom: 11px;
   letter-spacing: 0.5px;
-  line-height: 1.15;
-  font-family: 'HarmonyOS Sans', 'PingFang SC', 'Microsoft YaHei', Arial, Helvetica, sans-serif;
+  line-height: 1.12;
 }
 .meta {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
 }
 .author {
   font-size: 1.03rem;
   background: #e3eafc;
-  color: #1565c0;
+  color: #1558a0;
   border: none;
-  padding: 4px 17px;
+  padding: 4px 15px;
   letter-spacing: 1px;
   border-radius: 16px;
-  font-family: inherit;
 }
 .date {
   color: #888;
-  font-size: 1rem;
+  font-size: 0.97rem;
   font-family: 'Menlo', 'Consolas', monospace;
 }
-
 .detail-image {
-  margin: 22px 0 32px 0;
+  margin: 16px 0 28px 0;
   border-radius: 12px;
   max-width: 100%;
-  max-height: 320px;
+  max-height: 260px;
   box-shadow: 0 2px 12px rgba(22,101,216,0.08);
   background: #fff;
 }
-
 .detail-content {
   font-size: 1.18rem;
   color: #23333b;
@@ -254,20 +282,18 @@ onMounted(() => {
   background: #f4f7fa;
   border-radius: 8px;
   padding: 18px 19px 18px 20px;
-  font-family: 'Lato', 'PingFang SC', 'Microsoft YaHei', Arial, Helvetica, sans-serif;
 }
-
 .like-row {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 18px;
+  margin-bottom: 8px;
 }
 .like-btn {
   font-size: 1.09rem;
   font-weight: 600;
   padding: 8px 26px;
   border-radius: 24px;
-  background: linear-gradient(90deg, #1976d2 0%, #1565c0 100%);
+  background: linear-gradient(90deg, #1558a0 0%, #1565c0 100%);
   border: none;
   color: #fff;
   letter-spacing: 1px;
@@ -276,80 +302,67 @@ onMounted(() => {
 .like-btn:disabled {
   background: #bdbdbd;
 }
-
 .comment-title {
-  font-size: 1.27rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  color: #2e3c4d;
-  margin-bottom: 10px;
-  margin-top: 12px;
+  color: #1558a0;
+  margin-bottom: 13px;
+  margin-top: 0px;
   letter-spacing: 0.5px;
-  font-family: 'HarmonyOS Sans', 'PingFang SC', 'Microsoft YaHei', Arial, Helvetica, sans-serif;
 }
 .comment-form {
   display: flex;
   align-items: flex-start;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 .comment-input-item {
   flex: 1;
 }
 .comment-list-outer {
-  max-height: 240px;
+  min-height: 0;
+  max-height: 420px;
   overflow-y: auto;
-  margin-bottom: 8px;
+  margin-bottom: 0;
   background: #f9fbfd;
   border-radius: 8px;
-  padding-bottom: 2px;
+  padding: 7px 7px 7px 3px;
+  box-shadow: 0 1px 4px rgba(22,101,216,0.07);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 .comment-list {
-  margin-top: 8px;
-}
-.comment-item {
+  margin-top: 0;
   display: flex;
-  align-items: center;
-  padding: 13px 0 13px 0;
-  border-bottom: 1px solid #ecf0f3;
-  font-family: 'Fira Mono', 'Menlo', 'Consolas', monospace;
+  flex-direction: column;
+  align-items: flex-start;
 }
-.comment-user {
-  color: #1565c0;
-  font-weight: 600;
-  margin-right: 14px;
+.comment-pagination {
+  margin-top: 12px;
+  align-self: flex-end;
 }
-.comment-content {
-  color: #222;
-  margin-right: 18px;
-  font-size: 1.11rem;
-  font-family: 'Lato', 'PingFang SC', 'Microsoft YaHei', Arial, Helvetica, sans-serif;
-}
-.comment-date {
-  color: #999;
-  font-size: 0.97rem;
-  margin-left: auto;
-}
-
 @media (max-width: 900px) {
   .notification-detail-card {
-    padding: 12px 2vw;
-    max-height: 97vh;
+    max-width: 99vw;
+    padding: 0;
   }
-  .detail-title {
-    font-size: 1.35rem;
+  .notification-layout {
+    flex-direction: column;
+    min-height: 420px;
   }
-  .detail-content {
-    font-size: 1rem;
-    padding: 10px 8px 10px 10px;
+  .notification-left {
+    padding: 12px 8px 18px 14px;
+    border-right: none;
+    border-bottom: 1.5px solid #e2e8f0;
+    min-width: 0;
   }
-  .close-btn {
-    width: 38px;
-    height: 38px;
-    top: 10px;
-    right: 10px;
+  .notification-right {
+    padding: 16px 9px 13px 9px;
+    min-width: 0;
   }
-  .close-icon {
-    width: 20px;
-    height: 20px;
+  .comment-list-outer {
+    max-height: 180px;
+    padding: 3px 2px 2px 2px;
   }
 }
 </style>
