@@ -7,15 +7,15 @@ import Profile from "@/views/Profile.vue"
 import Account from "../views/Account.vue"
 import Deposit from "../views/Deposit.vue"
 import Loss from "../views/Loss.vue"
-import AdminProfile from "@/views/AdminProfile.vue";
+import AdminProfile from "@/views/AdminProfile.vue"
 
 const routes = [
     { path: '/register', component: Register },
     { path: '/login', component: Login },
-    { path: '/home', name: 'Home', component: Home }, // ★ 增加了name属性
+    { path: '/home', name: 'Home', component: Home },
     { path: '/admin', component: Admin },
     { path: '/profile', component: Profile },
-    { path: '/account', component: Account }, // 账户管理页面路由
+    { path: '/account', component: Account },
     { path: '/', redirect: '/login' },
     { path: '/:pathMatch(.*)*', redirect: '/login' },
     { path: '/deposit', component: Deposit },
@@ -24,6 +24,10 @@ const routes = [
     {
         path: '/admin/account',
         component: () => import('@/views/AdminAccount.vue'),
+    },
+    {
+        path: '/admin/customer',
+        component: () => import('@/views/AdminCustomer.vue'),
     },
     {
         path: '/notifications',
@@ -43,18 +47,14 @@ const router = createRouter({
     routes
 })
 
-// ★★★ 路由守卫：未登录强制跳转到 /login ★★★
 router.beforeEach((to, from, next) => {
-    // 允许无token访问的页面
     const publicPages = ['/login', '/register']
     const authRequired = !publicPages.includes(to.path)
     const token = localStorage.getItem('token')
 
     if (authRequired && !token) {
-        // 未登录，去主页面会自动跳到login
         next('/login')
     } else {
-        // 登录了或在公共页面，正常访问
         next()
     }
 })

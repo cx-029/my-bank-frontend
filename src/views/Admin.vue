@@ -153,6 +153,7 @@
   </div>
 </template>
 
+<!-- 仅修改 goPage 方法和侧边栏菜单，添加客户管理入口 -->
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -167,7 +168,6 @@ const activeMenu = ref('profile')
 const adminName = ref('管理员')
 const adminAvatar = ref('https://api.dicebear.com/7.x/identicon/svg?seed=admin')
 
-// 获取当前登录管理员信息
 const loadAdminInfo = async () => {
   try {
     const res = await axios.get('/api/admin/profile', {
@@ -207,7 +207,7 @@ const goPage = (index) => {
       router.push('/admin/account')
       break
     case 'customer':
-      router.push('/admin/users')
+      router.push('/admin/customer') // 跳转客户管理页面
       break
     case 'deposit':
       router.push('/admin/deposit')
