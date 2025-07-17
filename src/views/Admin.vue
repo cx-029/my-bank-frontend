@@ -1,6 +1,6 @@
 <template>
   <div class="bank-layout" :class="{ 'dark-mode': isDark }">
-    <!-- 顶部栏 -->
+    <!-- 顶部栏 仿照Home.vue设计 -->
     <header class="bank-header admin-header">
       <div class="bank-title main-bank-title">
         <svg width="34" height="34" viewBox="0 0 62 62" fill="none">
@@ -21,16 +21,25 @@
             v-model="isDark"
             active-text="夜间"
             inactive-text="日间"
-            style="margin-right: 18px"
+            style="margin-right: 32px"
         />
-        <el-avatar :size="28" :src="adminAvatar" style="border: 2px solid #1976d2;" />
-        <span class="username-full admin-username">{{ adminName }}</span>
-        <span class="admin-role-tag">管理员</span>
-        <el-button type="primary" size="small" @click="logout" style="margin-left:16px;">退出</el-button>
+        <el-dropdown>
+          <span class="user-area">
+            <el-avatar :size="28" :src="adminAvatar" style="border: 2px solid #1976d2;" />
+            <span class="username-full admin-username" :title="adminName">{{ adminName }}</span>
+            <i class="el-icon-arrow-down"></i>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="goProfile"><i class="el-icon-user"></i> 个人中心</el-dropdown-item>
+              <el-dropdown-item divided @click="logout"><i class="el-icon-switch-button"></i> 退出登录</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
     </header>
     <div class="bank-body">
-      <!-- 侧边栏 -->
+      <!-- 侧边栏 左侧统一黑色字体 -->
       <aside
           class="bank-sidenav admin-sidenav"
           :class="{ 'collapsed': collapsed, 'dark-mode': isDark }"
@@ -43,8 +52,8 @@
             class="bank-menu"
             :collapse="collapsed"
             background-color="transparent"
-            text-color="#264062"
-            active-text-color="#1976d2"
+            text-color="#222"
+            active-text-color="#222"
             @select="handleMenuSelect"
             collapse-transition
         >
@@ -58,7 +67,7 @@
           </el-menu-item>
           <el-menu-item index="customer">
             <el-icon><User /></el-icon>
-            <span v-if="!collapsed" class="sidenav-label admin-label">客户管理</span>
+            <span v-if="!collapsed" class="sidenav-label">客户管理</span>
           </el-menu-item>
           <el-menu-item index="deposit">
             <el-icon><WalletFilled /></el-icon>
@@ -74,7 +83,7 @@
           </el-menu-item>
           <el-menu-item index="settings">
             <el-icon><Setting /></el-icon>
-            <span v-if="!collapsed" class="sidenav-label admin-label">系统设置</span>
+            <span v-if="!collapsed" class="sidenav-label">系统设置</span>
           </el-menu-item>
         </el-menu>
       </aside>
@@ -87,7 +96,7 @@
               <div class="welcome-left">
                 <img
                     class="admin-avatar"
-                    src="https://api.dicebear.com/7.x/identicon/svg?seed=admin"
+                    :src="adminAvatar"
                     alt="管理员"
                 />
                 <div class="welcome-text">
@@ -145,10 +154,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { UserFilled, CreditCard, WarningFilled, BellFilled, WalletFilled, Setting, User } from '@element-plus/icons-vue'
+import axios from "axios"
 
 const router = useRouter()
 const isDark = ref(false)
@@ -157,9 +167,38 @@ const activeMenu = ref('profile')
 const adminName = ref('管理员')
 const adminAvatar = ref('https://api.dicebear.com/7.x/identicon/svg?seed=admin')
 
-// 侧边栏菜单点击跳转
-const handleMenuSelect = (index) => {
-  activeMenu.value = index
+// 获取当前登录管理员信息
+const loadAdminInfo = async () => {
+  try {
+    const res = await axios.get('/api/admin/profile', {
+      headers: {
+        Authorization: 'Bearer ' + localStorage.getItem('token')
+      }
+    })
+    if (res.data) {
+      adminName.value = res.data.username || '管理员'
+      adminAvatar.value = res.data.photoUrl || 'https://api.dicebear.com/7.x/identicon/svg?seed=admin'
+    }
+  } catch (e) {
+    adminName.value = '管理员'
+    adminAvatar.value = 'https://api.dicebear.com/7.x/identicon/svg?seed=admin'
+  }
+}
+onMounted(() => {
+  loadAdminInfo()
+})
+
+const logout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('role')
+  delete axios.defaults.headers.common['Authorization']
+  ElMessage.success('已退出登录')
+  router.push('/login')
+}
+const goProfile = () => {
+  router.push('/admin/profile')
+}
+const goPage = (index) => {
   switch (index) {
     case 'profile':
       router.push('/admin/profile')
@@ -186,10 +225,13 @@ const handleMenuSelect = (index) => {
       ElMessage.info('功能开发中')
   }
 }
+const handleMenuSelect = (index) => {
+  activeMenu.value = index
+  goPage(index)
+}
 </script>
 
 <style scoped>
-/* 你的原样式保持不变 */
 .bank-layout {
   height: 100vh;
   width: 100vw;
@@ -209,7 +251,7 @@ const handleMenuSelect = (index) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 48px 0 0;
+  padding: 0 56px 0 0;
   min-height: 72px;
   font-family: 'Segoe UI Semibold', 'PingFang SC', 'Arial', sans-serif;
 }
@@ -244,7 +286,18 @@ const handleMenuSelect = (index) => {
 .bank-user {
   display: flex;
   align-items: center;
-  gap: 8px;
+}
+.user-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 1.13rem;
+  color: #222;
+  font-family: 'Segoe UI', 'PingFang SC', 'Arial', sans-serif;
+}
+.bank-layout.dark-mode .user-area {
+  color: #eee;
 }
 .username-full {
   margin-left: 7px;
@@ -257,7 +310,7 @@ const handleMenuSelect = (index) => {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 1.12rem;
-  color: #1976d2;
+  color: #222;
 }
 .bank-layout.dark-mode .username-full {
   color: #cde4ff;
@@ -289,7 +342,7 @@ const handleMenuSelect = (index) => {
   position: relative;
 }
 
-/* 侧边栏 */
+/* 侧边栏统一黑色字体 */
 .bank-sidenav.admin-sidenav {
   background: #f5f8fa;
   box-shadow: 2px 0 12px rgba(25,118,210,0.08);
@@ -334,30 +387,18 @@ const handleMenuSelect = (index) => {
   justify-content: center;
   border: none;
   letter-spacing: 1.1px;
+  color: #222 !important;
 }
 .sidenav-label {
   font-size: 1.01rem;
   letter-spacing: 0.4px;
-  color: #264062;
+  color: #222 !important;
   font-weight: 500;
-}
-.admin-label {
-  color: #1976d2 !important;
-  font-weight: 600;
-}
-.bank-layout.dark-mode .sidenav-label,
-.bank-layout.dark-mode .admin-label {
-  color: #7bb4fa !important;
 }
 .bank-menu .el-menu-item.is-active,
 .bank-menu .el-menu-item:hover {
   background: linear-gradient(90deg, #e3f2fd 70%, #cbe7fb 100%) !important;
-  color: #1976d2 !important;
-}
-.bank-layout.dark-mode .bank-menu .el-menu-item.is-active,
-.bank-layout.dark-mode .bank-menu .el-menu-item:hover {
-  background: linear-gradient(90deg, #2c3a54 80%, #223159 100%) !important;
-  color: #7bb4fa !important;
+  color: #222 !important;
 }
 .bank-menu .el-menu-item .el-icon {
   margin-right: 0;
@@ -639,4 +680,5 @@ const handleMenuSelect = (index) => {
 .bank-layout.dark-mode .admin-hello {
   color: #cde4ff;
 }
+
 </style>

@@ -40,9 +40,9 @@
           </div>
         </div>
       </div>
-      <el-divider />
+      <el-divider class="divider-fancy" />
 
-      <!-- 两列展示 -->
+      <!-- 两列展示（去掉备注） -->
       <div class="profile-section profile-columns-align">
         <div class="profile-cols-strict-grid">
           <!-- 第一行 -->
@@ -88,17 +88,14 @@
             <div class="strict-cell value-cell">
               <span class="value">{{ admin.role || '-' }}</span>
             </div>
-            <div class="strict-cell label-cell">
-              <span class="label"><el-icon><Location /></el-icon> 备注</span>
-            </div>
-            <div class="strict-cell value-cell">
-              <span class="value">{{ admin.remark || '-' }}</span>
-            </div>
+            <!-- 留空，去掉备注对应的两格 -->
+            <div class="strict-cell label-cell"></div>
+            <div class="strict-cell value-cell"></div>
           </div>
         </div>
       </div>
 
-      <!-- 编辑弹窗 -->
+      <!-- 编辑弹窗（去掉备注项） -->
       <el-dialog
           v-model="isEdit"
           title="编辑个人信息"
@@ -132,9 +129,6 @@
           <el-form-item label="手机号">
             <el-input v-model="editAdmin.phone" />
           </el-form-item>
-          <el-form-item label="备注">
-            <el-input v-model="editAdmin.remark" />
-          </el-form-item>
         </el-form>
         <template #footer>
           <el-button @click="cancelEdit">取消</el-button>
@@ -148,7 +142,7 @@
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Edit, UserFilled, CreditCard, Phone, Message, Location, Upload, Setting, DocumentCopy } from '@element-plus/icons-vue'
+import { Edit, UserFilled, CreditCard, Phone, Message, Setting, DocumentCopy, Upload } from '@element-plus/icons-vue'
 import axios from "axios"
 import { useRouter } from 'vue-router'
 
@@ -160,8 +154,7 @@ const admin = ref({
   email: '',
   phone: '',
   role: '',
-  photoUrl: '',
-  remark: ''
+  photoUrl: ''
 })
 const editAdmin = ref({
   username: '',
@@ -169,8 +162,7 @@ const editAdmin = ref({
   email: '',
   phone: '',
   role: '',
-  photoUrl: '',
-  remark: ''
+  photoUrl: ''
 })
 const defaultAvatar = 'https://api.dicebear.com/7.x/identicon/svg?seed=admin'
 const formRef = ref(null)
@@ -198,8 +190,7 @@ const loadProfile = async () => {
         email: admin.value.email,
         phone: admin.value.phone,
         role: admin.value.role,
-        photoUrl: admin.value.photoUrl,
-        remark: admin.value.remark
+        photoUrl: admin.value.photoUrl
       }
     }
     isEdit.value = false
@@ -215,8 +206,7 @@ const openEditDialog = () => {
     email: admin.value.email,
     phone: admin.value.phone,
     role: admin.value.role,
-    photoUrl: admin.value.photoUrl,
-    remark: admin.value.remark
+    photoUrl: admin.value.photoUrl
   }
   isEdit.value = true
 }
@@ -284,8 +274,6 @@ onMounted(loadProfile)
 .bank-layout.dark-mode .profile-card {
   background: linear-gradient(120deg, #232a3c 60%, #2d3446 100%);
 }
-
-/* 右上角按钮组 */
 .card-action-buttons {
   position: absolute;
   top: 18px;
@@ -295,8 +283,7 @@ onMounted(loadProfile)
   z-index: 10;
   align-items: center;
 }
-.back-home-btn,
-.edit-btn {
+.back-home-btn, .edit-btn {
   transition: background 0.19s, color 0.19s, box-shadow 0.19s, transform 0.18s;
 }
 .back-home-btn {
@@ -305,19 +292,16 @@ onMounted(loadProfile)
   border: none;
   box-shadow: 0 2px 8px rgba(25,118,210,0.08);
 }
-.back-home-btn:hover,
-.edit-btn:hover {
+.back-home-btn:hover, .edit-btn:hover {
   background: #e3f2fd;
   color: #1976d2;
-  box-shadow: 0 4px 16px rgba(25,118,210,0.15);
+  box-shadow: 0 6px 24px rgba(25,118,210,0.18);
   transform: translateY(-2px) scale(1.08);
 }
 .close-icon {
   vertical-align: middle;
   background: none;
 }
-
-/* 主体信息头部 */
 .profile-header {
   display: flex;
   align-items: center;
@@ -331,7 +315,7 @@ onMounted(loadProfile)
   background: linear-gradient(90deg,#ddeaff 60%,#f8fafc 100%);
   border-radius: 50%;
   padding: 9px;
-  box-shadow: 0 2px 18px rgba(25,118,210,0.15);
+  box-shadow: 0 6px 24px rgba(25,118,210,0.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -339,6 +323,10 @@ onMounted(loadProfile)
 .profile-avatar {
   border: 4px solid #ddeaff;
   box-shadow: 0 2px 12px rgba(25,118,210,0.13);
+  transition: box-shadow 0.18s;
+}
+.profile-avatar:hover {
+  box-shadow: 0 8px 32px rgba(25,118,210,0.23);
 }
 .profile-info {
   display: flex;
@@ -374,8 +362,15 @@ onMounted(loadProfile)
 .bank-layout.dark-mode .profile-id {
   color: #b7d6ff;
 }
-
-/* 严格两列对齐排版 */
+.divider-fancy {
+  margin: 16px 0 18px 0;
+  border: none;
+  border-top: 2px dashed #e3eafc;
+  background: none;
+}
+.bank-layout.dark-mode .divider-fancy {
+  border-top: 2px dashed #33415a;
+}
 .profile-section.profile-columns-align {
   display: flex;
   flex-direction: row;
@@ -387,6 +382,10 @@ onMounted(loadProfile)
   padding: 22px 0;
   box-shadow: 0 1px 7px rgba(25,118,210,0.07);
   font-size: 1.08rem;
+}
+.bank-layout.dark-mode .profile-section.profile-columns-align {
+  background: #232a3c;
+  box-shadow: 0 1px 7px #223159;
 }
 .profile-cols-strict-grid {
   display: grid;
@@ -426,14 +425,7 @@ onMounted(loadProfile)
 .id-email-value {
   font-family: 'Consolas','JetBrains Mono','PingFang SC',monospace;
 }
-.id-mask {
-  letter-spacing: 0.22em;
-  font-size: 1.12rem;
-  color: #888;
-  font-family: 'Consolas','JetBrains Mono',monospace;
-  margin-right: 8px;
-}
-.id-reveal-btn, .copy-btn {
+.copy-btn {
   margin-left: 8px;
   vertical-align: middle;
   font-size: 1rem;
@@ -441,7 +433,7 @@ onMounted(loadProfile)
   cursor: pointer;
   transition: background 0.19s, color 0.19s, box-shadow 0.19s;
 }
-.id-reveal-btn:hover, .copy-btn:hover {
+.copy-btn:hover {
   background-color: #e3f2fd;
   color: #1976d2;
   box-shadow: 0 2px 10px rgba(25,118,210,0.12);
@@ -453,7 +445,6 @@ onMounted(loadProfile)
 .bank-layout.dark-mode .label-cell .label {
   color: #7bb4fa;
 }
-
 .profile-dialog :deep(.el-dialog__header) {
   background: #e3f2fd;
   font-weight: 700;
@@ -474,39 +465,6 @@ onMounted(loadProfile)
   display: flex;
   align-items: center;
 }
-
-/* 人脸识别弹窗内容居中和动画 */
-.face-dialog-content, .fade-dialog {
-  animation: fadeIn 0.32s cubic-bezier(.33,.91,.54,.97);
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.96);}
-  to { opacity: 1; transform: scale(1);}
-}
-.face-video-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 340px;
-  height: 240px;
-  margin-bottom: 12px;
-}
-.face-video-box video,
-.face-video-box img {
-  border-radius: 8px;
-  width: 340px;
-  height: 240px;
-  object-fit: cover;
-}
-/* 人脸识别按钮居中 */
-.face-btn-row-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 32px;
-  margin-top: 18px;
-}
-/* 响应式严格两列自动单列 */
 @media (max-width: 900px) {
   .profile-card { width: 98vw; padding: 12px 2vw; }
   .profile-header { flex-direction: column; gap: 16px; align-items: center;}
@@ -518,17 +476,6 @@ onMounted(loadProfile)
     max-width: 96vw;
     min-width: 0;
     font-size: 1.04rem;
-  }
-  .face-video-box {
-    width: 92vw;
-    height: auto;
-  }
-  .face-video-box video,
-  .face-video-box img {
-    width: 92vw;
-    height: auto;
-    max-width: 340px;
-    max-height: 240px;
   }
 }
 </style>
