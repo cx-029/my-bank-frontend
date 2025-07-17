@@ -218,8 +218,8 @@ const searchCustomer = async () => {
       ...queryForm.value
     }
     const res = await axios.get('/admin/customer/page', { params })
-    customers.value = res.data?.content || []
-    total.value = res.data?.totalElements || 0
+    customers.value = res.content || []
+    total.value = res.totalElements || 0
   } catch {
     ElMessage.error('查询失败')
   } finally {

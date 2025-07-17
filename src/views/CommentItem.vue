@@ -45,9 +45,9 @@
       </div>
     </div>
     <!-- 子评论展示 -->
-    <div class="child-comments" v-if="replies.length">
+    <div class="child-comments" v-if="childReplies.length">
       <CommentItem
-          v-for="item in replies"
+          v-for="item in childReplies"
           :key="item.id"
           :comment="item"
           :notification-id="notificationId"
@@ -85,9 +85,14 @@ const hasLiked = ref(false)
 
 const canDelete = computed(() => props.currentUserId === props.comment.userId)
 
+// 只展示未被删除的子评论
+const childReplies = computed(() =>
+    replies.value.filter(c => c.deleted !== 1)
+)
+
 const fetchReplies = async () => {
   const res = await getCommentReplies(props.comment.id)
-  replies.value = res.data
+  replies.value = Array.isArray(res) ? res : [] // 只用res，不用res.data
 }
 const refreshReplies = () => {
   fetchReplies()
@@ -95,9 +100,9 @@ const refreshReplies = () => {
 
 const fetchLikeStatus = async () => {
   const res1 = await getCommentLikeCount(props.comment.id)
-  likeCount.value = res1.data
+  likeCount.value = res1 ?? 0 // 只用res，不用res.data
   const res2 = await hasUserLikedComment(props.comment.id)
-  hasLiked.value = !!res2.data
+  hasLiked.value = !!res2 // 只用res，不用res.data
 }
 
 const handleDelete = async () => {

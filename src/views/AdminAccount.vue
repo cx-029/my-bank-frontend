@@ -195,10 +195,10 @@ const searchAccount = async () => {
     if (queryForm.value.accountId) params.id = queryForm.value.accountId
     if (queryForm.value.customerId) params.customerId = queryForm.value.customerId
     if (queryForm.value.accountType) params.accountType = queryForm.value.accountType
-    const res = await axios.get('/admin/account', { params })
+    const res = await axios.get('/admin/account/page', { params })
     // 后端返回 { content, totalElements }
-    accounts.value = res.data?.content || []
-    total.value = res.data?.totalElements || 0
+    accounts.value = res.content || []
+    total.value = res.totalElements || 0
   } catch {
     ElMessage.error('查询失败')
   } finally {

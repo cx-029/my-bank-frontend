@@ -21,13 +21,15 @@ request.interceptors.request.use(
 
 // 响应拦截器：统一错误处理
 request.interceptors.response.use(
-    response => response.data,   // 直接返回 data 部分，方便调用
+    response => {
+        // 如果后端返回的是数组或对象，直接返回
+        return response.data
+    },
     error => {
         const { response } = error
         if (response) {
             if (response.status === 401) {
                 ElMessage.error('请先登录')
-                // 可选：自动跳转登录页面
                 window.location.href = '/login'
             } else if (response.status === 403) {
                 ElMessage.error('没有权限！')

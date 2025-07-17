@@ -62,10 +62,10 @@
           <el-empty v-else description="暂无评论" />
         </div>
         <el-pagination
-            v-if="comments.length > pageSize"
+            v-if="rootComments.length > pageSize"
             background
             layout="prev, pager, next"
-            :total="comments.length"
+            :total="rootComments.length"
             :page-size="pageSize"
             :current-page="currentPage"
             @current-change="handlePageChange"
@@ -106,30 +106,34 @@ const closeDetail = () => {
   router.push({ name: 'NotificationList' });
 }
 
+// 只展示父评论（parentId == null，未删除）并分页
+const rootComments = computed(() => {
+  return (comments.value || []).filter(c => !c.parentId && c.deleted !== 1)
+})
 const pagedComments = computed(() => {
   const start = (currentPage.value - 1) * pageSize
-  return comments.value.slice(start, start + pageSize)
+  return rootComments.value.slice(start, start + pageSize)
 })
 
 const fetchDetail = async () => {
   const res = await getNotificationDetail(route.params.id)
-  notification.value = res.data
+  notification.value = res // 只用res，不用res.data
 }
 const fetchComments = async () => {
   const res = await getNotificationComments(route.params.id)
-  comments.value = res.data
+  comments.value = Array.isArray(res) ? res : [] // 只用res，不用res.data
 }
 const fetchLikes = async () => {
   const res = await getNotificationLikes(route.params.id)
-  likeCount.value = res.data
+  likeCount.value = res ?? 0 // 只用res，不用res.data
 }
 const checkLiked = async () => {
   const res = await hasUserLiked(route.params.id)
-  liked.value = res.data
+  liked.value = !!res // 只用res，不用res.data
 }
 const fetchUserInfo = async () => {
   const res = await getMe()
-  currentUserId.value = res.data?.id || null
+  currentUserId.value = res?.id || null // 只用res，不用res.data
 }
 const handleLike = async () => {
   if (!liked.value) {

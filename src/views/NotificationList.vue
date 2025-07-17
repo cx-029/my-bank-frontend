@@ -16,7 +16,6 @@
         </button>
       </el-tooltip>
     </div>
-    <!-- 查询栏 -->
     <div class="search-row">
       <el-input
           v-model="searchText"
@@ -28,7 +27,6 @@
           class="search-box"
       />
     </div>
-    <!-- 支持下拉分页的表格 -->
     <div class="table-scroll-wrapper" @scroll.passive="onTableScroll">
       <el-table
           :data="displayedNotifications"
@@ -55,9 +53,8 @@
           </template>
         </el-table-column>
       </el-table>
-      <!-- 加载更多提示 -->
       <div v-if="loadingMore" class="loading-more">正在加载更多公告…</div>
-      <div v-if="!hasMore && displayedNotifications.length" class="no-more">没有更多了</div>
+      <div v-if="!hasMore && (displayedNotifications?.length || 0)" class="no-more">没有更多了</div>
     </div>
   </el-card>
 </template>
@@ -75,21 +72,29 @@ const currentPage = ref(1)
 const loadingMore = ref(false)
 const hasMore = ref(true)
 
+onMounted(async () => {
+  const res = await getNotifications()
+  console.log('通知返回', res) // 看这里输出是不是数组
+  notifications.value = Array.isArray(res) ? res : []
+  hasMore.value = notifications.value.length > pageSize
+})
+
 const filteredNotifications = computed(() => {
-  if (!searchText.value) return notifications.value
+  if (!searchText.value) return notifications.value || []
   const text = searchText.value.toLowerCase()
-  return notifications.value.filter(item =>
+  return (notifications.value || []).filter(item =>
       (item.title && item.title.toLowerCase().includes(text)) ||
       (item.content && item.content.toLowerCase().includes(text))
   )
 })
+
 const displayedNotifications = computed(() => {
-  return filteredNotifications.value.slice(0, currentPage.value * pageSize)
+  return (filteredNotifications.value || []).slice(0, currentPage.value * pageSize)
 })
 
 const handleSearch = () => {
   currentPage.value = 1
-  hasMore.value = filteredNotifications.value.length > pageSize
+  hasMore.value = (filteredNotifications.value.length > pageSize)
 }
 
 const onTableScroll = async (e) => {
@@ -102,7 +107,7 @@ const onTableScroll = async (e) => {
     await nextTick()
     setTimeout(() => {
       currentPage.value += 1
-      hasMore.value = filteredNotifications.value.length > currentPage.value * pageSize
+      hasMore.value = (filteredNotifications.value.length > currentPage.value * pageSize)
       loadingMore.value = false
     }, 400)
   }
@@ -112,7 +117,6 @@ const goDetail = (id) => {
   router.push({ name: 'NotificationDetail', params: { id } })
 }
 
-// 此处请确保你的 vue-router 中有命名为 Home 的路由
 const goHome = () => {
   router.push({ name: 'Home' })
 }
@@ -120,12 +124,6 @@ const goHome = () => {
 function formatDate(row, column, cellValue) {
   return cellValue ? new Date(cellValue).toLocaleString() : ''
 }
-
-onMounted(async () => {
-  const res = await getNotifications()
-  notifications.value = res.data
-  hasMore.value = notifications.value.length > pageSize
-})
 </script>
 
 <style scoped>
