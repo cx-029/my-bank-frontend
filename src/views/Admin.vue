@@ -108,11 +108,11 @@
                 <div class="summary-title">后台总览</div>
                 <div class="summary-items summary-items-center">
                   <div class="summary-item">
-                    <span class="summary-num">231</span>
+                    <span class="summary-num">{{ customerCount }}</span>
                     <span>客户</span>
                   </div>
                   <div class="summary-item">
-                    <span class="summary-num">5</span>
+                    <span class="summary-num">{{pendingLossCount}}</span>
                     <span>待处理挂失</span>
                   </div>
                 </div>
@@ -167,6 +167,8 @@ const collapsed = ref(true)
 const activeMenu = ref('profile')
 const adminName = ref('管理员')
 const adminAvatar = ref('https://api.dicebear.com/7.x/identicon/svg?seed=admin')
+const customerCount = ref(0)
+const pendingLossCount = ref(0)
 
 const loadAdminInfo = async () => {
   try {
@@ -184,8 +186,25 @@ const loadAdminInfo = async () => {
     adminAvatar.value = 'https://api.dicebear.com/7.x/identicon/svg?seed=admin'
   }
 }
+
+// 新增：加载统计数据
+const loadSummary = async () => {
+  try {
+    const [customerRes, lossRes] = await Promise.all([
+      axios.get('/api/admin/customer/count'),
+      axios.get('/api/admin/loss/count')
+    ])
+    customerCount.value = customerRes.data
+    pendingLossCount.value = lossRes.data
+  } catch (e) {
+    customerCount.value = 0
+    pendingLossCount.value = 0
+  }
+}
+
 onMounted(() => {
   loadAdminInfo()
+  loadSummary()
 })
 
 const logout = () => {
