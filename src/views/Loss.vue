@@ -17,38 +17,53 @@
               <circle cx="31" cy="29" r="9.5" fill="#fff" stroke="#1976d2" stroke-width="2"/>
               <path d="M31 22v14M25.5 29h11" stroke="#1976d2" stroke-width="2" stroke-linecap="round"/>
             </svg>
-            <span>账户挂失管理</span>
+            <span>账户挂失/冻结/销户管理</span>
           </div>
           <el-button class="exit-btn" circle size="large" @click="goHome" aria-label="返回首页">
             <el-icon><CloseBold /></el-icon>
           </el-button>
         </div>
       </template>
-      <el-form :model="form" label-width="80px" class="loss-form" @submit.prevent>
-        <el-form-item label="挂失类型">
-          <el-select v-model="form.type" placeholder="请选择类型">
+
+      <!-- 当前账户状态 -->
+      <div class="account-status-row">
+        <span>当前账户状态：</span>
+        <el-tag
+            :type="accountStatusTagType(accountStatus)"
+            effect="dark"
+            class="account-status-tag"
+        >{{ accountStatus }}</el-tag>
+      </div>
+
+      <!-- 只在正常状态下允许申请挂失/冻结 -->
+      <el-form v-if="canApply" :model="form" label-width="80px" class="loss-form" @submit.prevent>
+        <el-form-item label="操作类型">
+          <el-select v-model="form.type" placeholder="请选择操作">
             <el-option label="口头挂失" value="口头挂失"></el-option>
             <el-option label="正式挂失" value="正式挂失"></el-option>
+            <el-option label="冻结" value="冻结"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="挂失原因">
-          <el-input v-model="form.reason" placeholder="请输入挂失原因" maxlength="100" show-word-limit>
+        <el-form-item label="原因">
+          <el-input v-model="form.reason" placeholder="请输入原因" maxlength="100" show-word-limit>
             <template #suffix>
               <el-tooltip placement="top">
-                <template #content>请简要描述挂失原因，如卡遗失、被盗等</template>
+                <template #content>请简要描述原因，如卡遗失、被盗、资金风险等</template>
                 <el-icon style="color:#1976d2;cursor:pointer"><el-icon-question-filled /></el-icon>
               </el-tooltip>
             </template>
           </el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="applying" @click="applyLoss" style="width:140px;font-weight:600">提交挂失申请</el-button>
+          <el-button type="primary" :loading="applying" @click="applyLoss" style="width:140px;font-weight:600">提交申请</el-button>
         </el-form-item>
       </el-form>
+      <el-alert v-else :title="accountStatusTip" type="info" show-icon class="loss-status-tip" />
+
       <el-divider>
-        <span class="loss-divider-title">挂失记录</span>
+        <span class="loss-divider-title">操作历史</span>
       </el-divider>
-      <!-- 表格外层加滚动容器，显示3行，超出滚动 -->
+
       <div class="loss-table-scroll">
         <el-table
             :data="lossList"
@@ -57,55 +72,38 @@
             size="large"
             border
             class="loss-table"
-            :empty-text="'暂无挂失记录'"
+            :empty-text="'暂无挂失/冻结/销户记录'"
         >
           <el-table-column prop="id" label="ID" width="70" align="center"/>
           <el-table-column prop="type" label="类型" width="110" align="center"/>
-          <el-table-column
-              prop="reason"
-              label="原因"
-              min-width="240"
-              show-overflow-tooltip="false"
-          />
+          <el-table-column prop="reason" label="原因" min-width="180"/>
           <el-table-column prop="status" label="状态" width="110" align="center">
             <template #default="{ row }">
               <el-tag
+                  :type="accountStatusTagType(row.status)"
                   effect="dark"
-                  :type="row.status === 'APPLIED' ? 'warning' : 'success'"
-                  disable-transitions
                   round
                   class="tag-status"
-              >{{ row.status === 'APPLIED' ? '已挂失' : '已解除' }}</el-tag>
+              >{{ row.status }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column
-              prop="createdAt"
-              label="申请时间"
-              min-width="180"
-              align="center"
-              :show-overflow-tooltip="false"
-          />
-          <el-table-column
-              prop="resolvedAt"
-              label="解除时间"
-              min-width="180"
-              align="center"
-              :show-overflow-tooltip="false"
-          >
+          <el-table-column prop="createdAt" label="申请时间" min-width="160" align="center"/>
+          <el-table-column prop="resolvedAt" label="处理时间" min-width="160" align="center">
             <template #default="{ row }">
               <span>{{ row.resolvedAt ? row.resolvedAt : '-' }}</span>
             </template>
           </el-table-column>
           <el-table-column label="操作" width="120" align="center">
             <template #default="{ row }">
+              <!-- 只允许挂失/冻结时解除 -->
               <el-button
-                  v-if="row.status === 'APPLIED'"
+                  v-if="canRelease(row)"
                   size="small"
                   type="success"
                   @click="releaseLoss(row.id)"
                   :loading="releasingId === row.id"
                   class="release-btn"
-              >解除挂失</el-button>
+              >解除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -115,7 +113,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { CloseBold, QuestionFilled as ElIconQuestionFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
@@ -127,10 +125,21 @@ const lossList = ref([])
 const loading = ref(false)
 const applying = ref(false)
 const releasingId = ref(null)
+const accountStatus = ref('正常')
 
 onMounted(async () => {
+  await fetchAccountStatus()
   await fetchLossList()
 })
+
+const fetchAccountStatus = async () => {
+  try {
+    const res = await axios.get('/api/account')
+    accountStatus.value = res.data.status || '正常'
+  } catch (e) {
+    accountStatus.value = '未知'
+  }
+}
 
 const fetchLossList = async () => {
   loading.value = true
@@ -138,15 +147,29 @@ const fetchLossList = async () => {
     const res = await axios.get('/api/account/loss/list')
     lossList.value = res.data
   } catch (e) {
-    ElMessage.error('查询挂失记录失败')
+    ElMessage.error('查询历史记录失败')
   } finally {
     loading.value = false
   }
 }
 
+// 只有正常时允许挂失/冻结
+const canApply = computed(() => ['正常'].includes(accountStatus.value))
+const accountStatusTip = computed(() => {
+  switch (accountStatus.value) {
+    case '挂失': return '账户已挂失，请联系管理员或等待处理，无法重复挂失。'
+    case '冻结': return '账户已冻结，请联系管理员或等待处理。'
+    case '销户': return '账户已销户，无法再进行任何操作。'
+    default: return '当前账户不可操作。'
+  }
+})
+
+// 只允许挂失/冻结状态下的操作记录可以“解除”
+const canRelease = (row) => ['挂失', '冻结'].includes(row.status)
+
 const applyLoss = async () => {
   if (!form.value.type || !form.value.reason) {
-    ElMessage.warning('请填写挂失类型和原因')
+    ElMessage.warning('请填写操作类型和原因')
     return
   }
   applying.value = true
@@ -159,19 +182,20 @@ const applyLoss = async () => {
       ElMessage.success(res.data)
       form.value.type = ''
       form.value.reason = ''
+      await fetchAccountStatus()
       await fetchLossList()
     } else {
-      ElMessage.error(res.data || '挂失申请失败')
+      ElMessage.error(res.data || '申请失败')
     }
   } catch (e) {
-    ElMessage.error('提交挂失申请失败')
+    ElMessage.error('提交申请失败')
   } finally {
     applying.value = false
   }
 }
 
 const releaseLoss = async (id) => {
-  ElMessageBox.confirm('确定要解除该挂失吗？', '提示', {
+  ElMessageBox.confirm('确定要解除该挂失/冻结状态吗？', '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
@@ -181,12 +205,13 @@ const releaseLoss = async (id) => {
       const res = await axios.post('/api/account/loss/release')
       if (res.data && res.data.includes('成功')) {
         ElMessage.success(res.data)
+        await fetchAccountStatus()
         await fetchLossList()
       } else {
-        ElMessage.error(res.data || '解除挂失失败')
+        ElMessage.error(res.data || '解除失败')
       }
     } catch (e) {
-      ElMessage.error('解除挂失失败')
+      ElMessage.error('解除失败')
     } finally {
       releasingId.value = null
     }
@@ -195,6 +220,17 @@ const releaseLoss = async (id) => {
 
 const goHome = () => {
   router.replace('/home')
+}
+
+// 状态的tag样式映射
+const accountStatusTagType = (status) => {
+  switch (status) {
+    case '正常': return 'success'
+    case '挂失': return 'warning'
+    case '冻结': return 'info'
+    case '销户': return 'danger'
+    default: return 'default'
+  }
 }
 </script>
 
@@ -288,9 +324,29 @@ const goHome = () => {
   letter-spacing: 1px;
 }
 
+.account-status-row {
+  margin-bottom: 18px;
+  font-size: 1.18rem;
+  font-weight: 600;
+  color: #1976d2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.account-status-tag {
+  font-size: 1.06rem;
+  font-weight: 700;
+  padding: 2px 18px;
+  border-radius: 10px;
+  letter-spacing: 1px;
+}
+.loss-status-tip {
+  margin-bottom: 16px;
+}
+
 /* 滚动容器：只显示三行，多的滚动 */
 .loss-table-scroll {
-  max-height: 177px; /* 3行高度+表头，按表格行高1行约48~50px估算 */
+  max-height: 177px;
   overflow-y: auto;
   margin-top: 4px;
 }
