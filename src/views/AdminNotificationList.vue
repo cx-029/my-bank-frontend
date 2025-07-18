@@ -1,11 +1,19 @@
+<!-- AdminNotificationList.vue -->
 <template>
   <div class="admin-notification-list">
-    <el-card>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-weight:700;font-size:1.25em;">通知管理</span>
+    <el-card class="notification-card" shadow="hover">
+      <div class="notification-header">
+        <span class="notification-title">通知管理</span>
+        <el-button class="close-btn" type="text" @click="goBack" circle>
+          <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor">
+            <path d="M2 2 L14 14 M14 2 L2 14" stroke="#888" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </el-button>
+      </div>
+      <div class="notification-action-row">
         <el-button type="primary" @click="openDialog(null)">新建通知</el-button>
       </div>
-      <el-table :data="notifications" style="margin-top:18px;">
+      <el-table :data="notifications" style="width:100%;margin-top:18px;" stripe>
         <el-table-column prop="id" label="ID" width="60"/>
         <el-table-column prop="title" label="标题" />
         <el-table-column prop="author" label="作者" />
@@ -65,6 +73,12 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from '@/utils/request'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+function goBack() {
+  router.push('/admin')
+}
 
 const notifications = ref([])
 const total = ref(0)
@@ -161,5 +175,55 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.admin-notification-list { max-width:900px; margin:auto; padding-top:40px;}
+.admin-notification-list {
+  padding: 36px;
+  max-width: none;
+  margin: 0;
+}
+.notification-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #e3eafc;
+  padding: 0;
+  max-width: none;
+}
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  position: relative;
+  padding: 24px 28px 0 28px;
+}
+.notification-title {
+  font-size: 1.3em;
+  font-weight: 700;
+  color: #1976d2;
+  letter-spacing: 1.2px;
+}
+.close-btn {
+  position: absolute;
+  top: 24px;
+  right: 32px;
+  background: none;
+  border: none;
+  z-index: 10;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+.close-btn:hover svg path {
+  stroke: #1976d2;
+}
+.notification-action-row {
+  padding: 0 28px;
+  margin-bottom: 10px;
+  margin-top: 5px;
+  text-align: right;
+}
+@media (max-width: 900px) {
+  .admin-notification-list { padding: 16px 2vw 12px 2vw; }
+  .notification-header { flex-direction: column; gap: 12px;}
+  .notification-title { font-size: 1.2rem;}
+  .notification-action-row { margin-bottom: 10px; }
+}
 </style>

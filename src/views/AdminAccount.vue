@@ -1,9 +1,10 @@
+<!-- AdminAccount.vue -->
 <template>
   <div class="admin-account-page">
     <el-card class="account-card" shadow="hover">
       <div class="account-header">
         <span class="account-title">账户管理</span>
-        <el-button class="logout-btn" type="text" @click="logout" circle>
+        <el-button class="close-btn" type="text" @click="goBack" circle>
           <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor">
             <path d="M2 2 L14 14 M14 2 L2 14" stroke="#888" stroke-width="2" stroke-linecap="round"/>
           </svg>
@@ -156,6 +157,12 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from '@/utils/request'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+function goBack() {
+  router.push('/admin')
+}
 
 const accounts = ref([])
 const total = ref(0)
@@ -272,22 +279,18 @@ const delAccount = async (id) => {
     loading.value = false
   }).catch(() => {})
 }
-
-// 退出方法
-const logout = () => {
-  window.location.href = '/admin'
-}
 </script>
 
 <style scoped>
 .admin-account-page {
-  max-width: 980px;
-  margin: 32px auto;
+  padding: 36px;
+  max-width: none;
+  margin: 0;
 }
 .account-card {
-  padding: 24px;
-  border-radius: 18px;
-  box-shadow: 0 2px 12px #e3eafc;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #e3eafc;
+  padding: 0;
 }
 .account-header {
   display: flex;
@@ -295,9 +298,10 @@ const logout = () => {
   align-items: center;
   margin-bottom: 8px;
   position: relative;
+  padding: 24px 28px 0 28px;
 }
 .account-title {
-  font-size: 1.36rem;
+  font-size: 1.3em;
   font-weight: 700;
   color: #1976d2;
   letter-spacing: 1.2px;
@@ -305,6 +309,7 @@ const logout = () => {
 .account-query-row {
   margin-bottom: 18px;
   margin-top: 5px;
+  padding: 0 28px;
 }
 .account-query-form {
   background: #f8fcff;
@@ -323,10 +328,10 @@ const logout = () => {
   margin-top: 10px;
   text-align: right;
 }
-.logout-btn {
+.close-btn {
   position: absolute;
-  top: 8px;
-  right: 10px;
+  top: 24px;
+  right: 32px;
   background: none;
   border: none;
   z-index: 10;
@@ -334,11 +339,11 @@ const logout = () => {
   padding: 0;
   transition: color 0.2s;
 }
-.logout-btn:hover svg path {
+.close-btn:hover svg path {
   stroke: #1976d2;
 }
 @media (max-width: 900px) {
-  .account-card { padding: 16px 2vw 12px 2vw; }
+  .admin-account-page { padding: 16px 2vw 12px 2vw; }
   .account-header { flex-direction: column; gap: 12px;}
   .account-title { font-size: 1.2rem;}
   .account-query-row { margin-bottom: 10px; }
