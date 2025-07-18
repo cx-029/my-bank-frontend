@@ -1,4 +1,3 @@
-<!-- AdminNotificationCommentList.vue -->
 <template>
   <div class="admin-notification-comment-list">
     <el-card class="comment-card" shadow="hover">
@@ -45,7 +44,12 @@
           </el-row>
         </el-form>
       </div>
-      <el-table :data="comments" style="width:100%;margin-top:18px;" stripe>
+      <el-table
+          :data="comments"
+          style="width:100%;margin-top:18px;"
+          stripe
+          max-height="360"
+      >
         <el-table-column prop="id" label="ID" width="60"/>
         <el-table-column prop="notificationId" label="通知ID" width="90"/>
         <el-table-column prop="userId" label="用户ID" width="90"/>
@@ -66,15 +70,18 @@
           </template>
         </el-table-column>
       </el-table>
-      <el-pagination
-          background
-          layout="prev, pager, next"
-          :total="total"
-          :page-size="pageSize"
-          :current-page="page"
-          @current-change="handlePage"
-          style="margin-top:20px;"
-      />
+      <div class="pagination-row">
+        <el-pagination
+            background
+            layout="sizes, prev, pager, next, total"
+            :total="total"
+            :page-size="pageSize"
+            :page-sizes="[5, 10, 20]"
+            :current-page="page"
+            @current-change="handlePage"
+            @size-change="handleSizeChange"
+        />
+      </div>
 
       <!-- 详情弹窗 -->
       <el-dialog v-model="detailVisible" title="评论详情" width="420px">
@@ -112,7 +119,7 @@ function goBack() {
 const comments = ref([])
 const total = ref(0)
 const page = ref(1)
-const pageSize = ref(10)
+const pageSize = ref(5) // 默认一页5条，体验更好
 const queryForm = ref({
   content: '',
   notificationId: '',
@@ -123,6 +130,7 @@ const queryForm = ref({
 const detailVisible = ref(false)
 const detailRow = ref({})
 
+// 查询评论
 const searchComments = async () => {
   try {
     const params = {
@@ -154,6 +162,12 @@ const resetQuery = () => {
 
 const handlePage = (p) => {
   page.value = p
+  searchComments()
+}
+
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  page.value = 1
   searchComments()
 }
 
@@ -237,6 +251,11 @@ const showDetail = (row) => {
 .query-btns .el-form-item {
   display: flex;
   gap: 10px;
+}
+.pagination-row {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 @media (max-width: 900px) {
   .admin-notification-comment-list { padding: 16px 2vw 12px 2vw; }
