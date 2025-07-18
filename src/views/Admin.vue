@@ -81,6 +81,10 @@
             <el-icon><BellFilled /></el-icon>
             <span v-if="!collapsed" class="sidenav-label">通知中心</span>
           </el-menu-item>
+          <el-menu-item index="comment">
+            <el-icon><ChatDotSquare /></el-icon>
+            <span v-if="!collapsed" class="sidenav-label">评论管理</span>
+          </el-menu-item>
           <el-menu-item index="settings">
             <el-icon><Setting /></el-icon>
             <span v-if="!collapsed" class="sidenav-label">系统设置</span>
@@ -158,7 +162,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { UserFilled, CreditCard, WarningFilled, BellFilled, WalletFilled, Setting, User } from '@element-plus/icons-vue'
+import { UserFilled, CreditCard, WarningFilled, BellFilled, WalletFilled, Setting, User, ChatDotSquare } from '@element-plus/icons-vue'
 import axios from "axios"
 
 const router = useRouter()
@@ -239,6 +243,9 @@ const goPage = (index) => {
       break
     case 'settings':
       router.push('/admin/settings')
+      break
+    case 'comment':
+      router.push('/admin/notification-comments')
       break
     default:
       ElMessage.info('功能开发中')
