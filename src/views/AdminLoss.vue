@@ -1,33 +1,42 @@
+<!-- AdminLoss.vue -->
 <template>
   <div class="admin-loss-page">
-    <el-card>
-      <div class="loss-title">
-        挂失管理
+    <el-card class="loss-card" shadow="hover">
+      <div class="loss-header">
+        <span class="loss-title">挂失管理</span>
         <el-button class="close-btn" type="text" @click="goBack" circle>
           <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor">
             <path d="M2 2 L14 14 M14 2 L2 14" stroke="#888" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </el-button>
       </div>
-      <!-- 查询区 -->
-      <el-form :inline="true" :model="searchForm" class="search-form" @submit.prevent="onSearch">
-        <el-form-item label="账户ID">
-          <el-input v-model="searchForm.accountId" placeholder="输入账户ID" clearable style="width:140px"/>
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="searchForm.status" placeholder="全部" clearable style="width:120px">
-            <el-option label="挂失" value="挂失"/>
-            <el-option label="冻结" value="冻结"/>
-            <el-option label="销户" value="销户"/>
-            <el-option label="正常" value="正常"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="onSearch">查询</el-button>
-          <el-button @click="resetSearch">重置</el-button>
-        </el-form-item>
-      </el-form>
-      <!-- 列表区：只允许最新一条挂失记录操作 -->
+      <div class="loss-query-row">
+        <el-form :inline="false" :model="searchForm" class="loss-query-form" @submit.prevent="onSearch">
+          <el-row :gutter="18">
+            <el-col :xs="24" :sm="12" :md="8">
+              <el-form-item label="账户ID">
+                <el-input v-model="searchForm.accountId" placeholder="输入账户ID" clearable />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8">
+              <el-form-item label="状态">
+                <el-select v-model="searchForm.status" placeholder="全部" clearable>
+                  <el-option label="挂失" value="挂失"/>
+                  <el-option label="冻结" value="冻结"/>
+                  <el-option label="销户" value="销户"/>
+                  <el-option label="正常" value="正常"/>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" class="query-btns">
+              <el-form-item>
+                <el-button type="primary" @click="onSearch">查询</el-button>
+                <el-button @click="resetSearch">重置</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </div>
       <el-table :data="lossReports" style="width:100%;margin-top:18px;" border>
         <el-table-column prop="id" label="记录ID" width="80"/>
         <el-table-column prop="accountId" label="账户ID" width="120"/>
@@ -38,7 +47,6 @@
         <el-table-column prop="resolvedAt" label="处理时间" width="180"/>
         <el-table-column label="操作" width="160">
           <template #default="scope">
-            <!-- 只允许最新记录操作 -->
             <el-button
                 size="small"
                 type="primary"
@@ -54,7 +62,6 @@
           </template>
         </el-table-column>
       </el-table>
-      <!-- 分页 -->
       <el-pagination
           v-model:current-page="page"
           :page-size="pageSize"
@@ -93,7 +100,6 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 
-// 查询相关
 const lossReports = ref([])
 const page = ref(1)
 const pageSize = ref(10)
@@ -103,7 +109,6 @@ const searchForm = reactive({
   status: ''
 })
 
-// 编辑相关
 const editDialogVisible = ref(false)
 const editForm = reactive({
   id: null,
@@ -111,15 +116,12 @@ const editForm = reactive({
   reason: ''
 })
 
-// 用于判断是否为最新挂失记录
 function isLatest(row) {
-  // 最新记录是第一条（后端需保证倒序返回）
   if (!lossReports.value.length) return false
   return lossReports.value[0].id === row.id
 }
 
 function fetchLossReports() {
-  // 查询参数
   const params = {
     page: page.value - 1,
     size: pageSize.value,
@@ -136,7 +138,6 @@ function onSearch() {
   page.value = 1
   fetchLossReports()
 }
-
 function resetSearch() {
   searchForm.accountId = ''
   searchForm.status = ''
@@ -144,7 +145,6 @@ function resetSearch() {
   fetchLossReports()
 }
 
-// 删除
 function deleteReport(id) {
   axios.delete(`/api/admin/loss/${id}`).then(() => {
     ElMessage.success('删除成功')
@@ -152,7 +152,6 @@ function deleteReport(id) {
   })
 }
 
-// 编辑弹窗相关
 function openEdit(row) {
   editForm.id = row.id
   editForm.status = row.status
@@ -175,7 +174,6 @@ function submitEdit() {
   })
 }
 
-// 右上角叉叉
 const router = useRouter()
 function goBack() {
   router.push('/admin')
@@ -185,13 +183,34 @@ onMounted(fetchLossReports)
 </script>
 
 <style scoped>
-.admin-loss-page { padding: 36px; }
-.loss-title { font-size: 1.3em; font-weight: 700; margin-bottom: 18px; position:relative;}
-.search-form { margin-bottom: 14px; }
+.admin-loss-page {
+  padding: 36px;
+  max-width: none;
+  margin: 0;
+}
+.loss-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #e3eafc;
+  padding: 0;
+}
+.loss-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  position: relative;
+  padding: 24px 28px 0 28px;
+}
+.loss-title {
+  font-size: 1.3em;
+  font-weight: 700;
+  color: #1976d2;
+  letter-spacing: 1.2px;
+}
 .close-btn {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 24px;
+  right: 32px;
   background: none;
   border: none;
   z-index: 10;
@@ -201,5 +220,26 @@ onMounted(fetchLossReports)
 }
 .close-btn:hover svg path {
   stroke: #1976d2;
+}
+.loss-query-row {
+  margin-bottom: 18px;
+  margin-top: 5px;
+  padding: 0 28px;
+}
+.loss-query-form {
+  background: #f8fcff;
+  border-radius: 11px;
+  padding: 16px 18px 8px 18px;
+  box-shadow: 0 2px 10px #e3eafc;
+}
+.query-btns .el-form-item {
+  display: flex;
+  gap: 10px;
+}
+@media (max-width: 900px) {
+  .admin-loss-page { padding: 16px 2vw 12px 2vw; }
+  .loss-header { flex-direction: column; gap: 12px;}
+  .loss-title { font-size: 1.2rem;}
+  .loss-query-row { margin-bottom: 10px; }
 }
 </style>

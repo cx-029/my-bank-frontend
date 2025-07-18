@@ -10,8 +10,30 @@
           </svg>
         </el-button>
       </div>
-      <div class="notification-action-row">
-        <el-button type="primary" @click="openDialog(null)">新建通知</el-button>
+      <div class="notification-query-row">
+        <el-form :model="queryForm" class="notification-query-form" @submit.prevent>
+          <el-row :gutter="18">
+            <el-col :xs="24" :sm="12" :md="8">
+              <el-form-item label="标题">
+                <el-input v-model="queryForm.title" clearable placeholder="标题模糊查询"/>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8">
+              <el-form-item label="作者">
+                <el-input v-model="queryForm.author" clearable placeholder="作者精确查询"/>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" class="query-btns">
+              <el-form-item>
+                <el-button type="primary" @click="searchNotification">查询</el-button>
+                <el-button @click="resetQuery">重置</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+        <div class="add-notification-btn-row">
+          <el-button type="primary" @click="openDialog(null)">新建通知</el-button>
+        </div>
       </div>
       <el-table :data="notifications" style="width:100%;margin-top:18px;" stripe>
         <el-table-column prop="id" label="ID" width="60"/>
@@ -88,27 +110,40 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('新建通知')
 const form = ref({ title: '', content: '', imageUrl: '' })
 const editingId = ref(null)
+const queryForm = ref({
+  title: '',
+  author: ''
+})
 
-// 上传图片带 token
-const uploadHeaders = {
-  Authorization: 'Bearer ' + localStorage.getItem('token')
-}
-
-const loadList = async () => {
+// 查询通知（带分页参数和查询条件）
+const searchNotification = async () => {
   try {
-    const res = await axios.get('/admin/notifications', {
-      params: { page: page.value - 1, size: pageSize.value }
-    })
+    const params = {
+      page: page.value - 1,
+      size: pageSize.value,
+      ...queryForm.value
+    }
+    const res = await axios.get('/admin/notifications', { params })
     notifications.value = res.content || []
     total.value = res.totalElements || 0
   } catch (e) {
-    console.error('loadList error', e)
+    ElMessage.error('查询失败')
   }
+}
+
+onMounted(() => {
+  searchNotification()
+})
+
+const resetQuery = () => {
+  queryForm.value = { title: '', author: '' }
+  page.value = 1
+  searchNotification()
 }
 
 const handlePage = (p) => {
   page.value = p
-  loadList()
+  searchNotification()
 }
 
 const openDialog = (row) => {
@@ -122,6 +157,11 @@ const openDialog = (row) => {
     form.value = { title: '', content: '', imageUrl: '' }
     editingId.value = null
   }
+}
+
+// 上传图片带 token
+const uploadHeaders = {
+  Authorization: 'Bearer ' + localStorage.getItem('token')
 }
 
 // 图片上传相关
@@ -153,9 +193,9 @@ const submitForm = async () => {
       ElMessage.success('发布成功')
     }
     dialogVisible.value = false
-    loadList()
+    searchNotification()
   } catch (e) {
-    console.error('submitForm error', e)
+    ElMessage.error('操作失败')
   }
 }
 
@@ -163,15 +203,11 @@ const deleteNotify = async (id) => {
   try {
     await axios.delete(`/admin/notifications/${id}`)
     ElMessage.success('删除成功')
-    loadList()
+    searchNotification()
   } catch (e) {
-    console.error('deleteNotify error', e)
+    ElMessage.error('删除失败')
   }
 }
-
-onMounted(() => {
-  loadList()
-})
 </script>
 
 <style scoped>
@@ -214,16 +250,29 @@ onMounted(() => {
 .close-btn:hover svg path {
   stroke: #1976d2;
 }
-.notification-action-row {
-  padding: 0 28px;
-  margin-bottom: 10px;
+.notification-query-row {
+  margin-bottom: 18px;
   margin-top: 5px;
+  padding: 0 28px;
+}
+.notification-query-form {
+  background: #f8fcff;
+  border-radius: 11px;
+  padding: 16px 18px 8px 18px;
+  box-shadow: 0 2px 10px #e3eafc;
+}
+.query-btns .el-form-item {
+  display: flex;
+  gap: 10px;
+}
+.add-notification-btn-row {
+  margin-top: 10px;
   text-align: right;
 }
 @media (max-width: 900px) {
   .admin-notification-list { padding: 16px 2vw 12px 2vw; }
   .notification-header { flex-direction: column; gap: 12px;}
   .notification-title { font-size: 1.2rem;}
-  .notification-action-row { margin-bottom: 10px; }
+  .notification-query-row { margin-bottom: 10px; }
 }
 </style>
