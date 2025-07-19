@@ -69,6 +69,10 @@
             <el-icon><User /></el-icon>
             <span v-if="!collapsed" class="sidenav-label">客户管理</span>
           </el-menu-item>
+          <el-menu-item index="admin-wealth-products">
+            <el-icon><Money /></el-icon>
+            <span v-if="!collapsed" class="sidenav-label">理财产品</span>
+          </el-menu-item>
           <el-menu-item index="deposit">
             <el-icon><WalletFilled /></el-icon>
             <span v-if="!collapsed" class="sidenav-label">存取管理</span>
@@ -159,6 +163,7 @@
 
 <!-- 仅修改 goPage 方法和侧边栏菜单，添加客户管理入口 -->
 <script setup>
+import { Money } from '@element-plus/icons-vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -230,7 +235,7 @@ const goPage = (index) => {
       router.push('/admin/account')
       break
     case 'customer':
-      router.push('/admin/customer') // 跳转客户管理页面
+      router.push('/admin/customer')
       break
     case 'deposit':
       router.push('/admin/deposit')
@@ -246,6 +251,9 @@ const goPage = (index) => {
       break
     case 'comment':
       router.push('/admin/notification-comments')
+      break
+    case 'admin-wealth-products':
+      router.push('/admin/wealth-products')
       break
     default:
       ElMessage.info('功能开发中')
