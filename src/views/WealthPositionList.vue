@@ -2,6 +2,11 @@
   <el-card class="position-list-card" shadow="hover">
     <div class="title-row">
       <span class="main-title">我的理财持仓</span>
+      <el-button class="close-btn" type="text" @click="goBack" circle>
+        <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor">
+          <path d="M2 2 L14 14 M14 2 L2 14" stroke="#888" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </el-button>
     </div>
     <el-table :data="positions" style="width: 100%" border>
       <el-table-column prop="productName" label="产品名称" width="160"/>
@@ -40,12 +45,18 @@
 import { ref, onMounted } from 'vue'
 import request from '@/utils/request'
 import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const positions = ref([])
 const redeemDialogVisible = ref(false)
 const selectedPosition = ref(null)
 const redeemAmount = ref(0)
 const redeemLoading = ref(false)
+
+const goBack = () => {
+  router.back()
+}
 
 const openRedeemDialog = (pos) => {
   selectedPosition.value = pos
@@ -74,7 +85,14 @@ const confirmRedeem = async () => {
 const loadPositions = async () => {
   const customerId = localStorage.getItem('customerId')
   const res = await request.get('/wealth/position/my', { params: { customerId } })
-  positions.value = Array.isArray(res) ? res : []
+  // 兼容后端返回格式：content 或数组
+  if (res && Array.isArray(res.content)) {
+    positions.value = res.content
+  } else if (Array.isArray(res)) {
+    positions.value = res
+  } else {
+    positions.value = []
+  }
 }
 
 onMounted(loadPositions)
@@ -86,15 +104,35 @@ onMounted(loadPositions)
   margin: 38px auto;
   border-radius: 18px;
   box-shadow: 0 4px 28px rgba(25,118,210,0.08);
+  position: relative;
 }
 .title-row {
   margin-bottom: 20px;
   text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  min-height: 44px;
 }
 .main-title {
   font-size: 1.44rem;
   font-weight: 700;
   color: #1976d2;
   letter-spacing: 1.5px;
+}
+.close-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  z-index: 10;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+.close-btn:hover svg path {
+  stroke: #1976d2;
 }
 </style>
