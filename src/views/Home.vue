@@ -77,6 +77,14 @@
           <el-icon><WalletFilled /></el-icon>
           <span v-if="navHover" class="sidenav-label">存取管理</span>
         </el-menu-item>
+        <el-menu-item index="wealth-products">
+          <el-icon><Money /></el-icon>
+          <span v-if="navHover" class="sidenav-label">理财产品</span>
+        </el-menu-item>
+        <el-menu-item index="wealth-positions">
+          <el-icon><Notebook /></el-icon>
+          <span v-if="navHover" class="sidenav-label">我的持仓</span>
+        </el-menu-item>
         <el-menu-item index="ai">
           <el-icon><Cpu /></el-icon>
           <span v-if="navHover" class="sidenav-label">AI助手</span>
@@ -176,6 +184,7 @@
 </template>
 
 <script setup>
+import { Money, Notebook } from '@element-plus/icons-vue'
 import { ref, onMounted, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -234,8 +243,12 @@ const handleMenuSelect = (index) => {
     router.push('/profile')
   } else if (index === 'account') {
     router.push('/account')
-  }else if (index === 'notice'){
+  } else if (index === 'notice'){
     router.push('/notifications')
+  } else if (index === 'wealth-products') {
+    router.push('/wealth/products')
+  } else if (index === 'wealth-positions') {
+    router.push('/wealth/positions')
   } else {
     ElMessage.info(`【${menuName(index)}】功能开发中`)
   }

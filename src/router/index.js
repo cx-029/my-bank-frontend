@@ -30,6 +30,18 @@ const routes = [
         component: () => import('@/views/AdminNotificationCommentList.vue')
     },
     {
+        path: '/wealth/products',
+        component: () => import('@/views/WealthProductList.vue') // 客户理财产品
+    },
+    {
+        path: '/wealth/positions',
+        component: () => import('@/views/WealthPositionList.vue') // 客户持仓
+    },
+    {
+        path: '/admin/wealth-products',
+        component: () => import('@/views/AdminWealthProduct.vue') // 管理员理财产品管理
+    },
+    {
         path: '/admin/loss',
         component: () => import('@/views/AdminLoss.vue'), // 新建页面
     },
