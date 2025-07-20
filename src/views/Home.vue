@@ -39,7 +39,7 @@
       </div>
     </header>
 
-    <!-- 侧边栏紧贴页面最顶端且不遮挡内容 -->
+    <!-- 侧边栏 -->
     <aside
         class="bank-sidenav"
         :class="{ 'collapsed': !navHover, 'dark-mode': isDark }"
@@ -112,70 +112,95 @@
 
     <!-- 主内容区 -->
     <main class="bank-main">
-      <div class="ai-main-scroll">
-        <el-card class="ai-card ai-card-border" shadow="always">
-          <div class="ai-center">
-            <img
-                class="ai-avatar"
-                :class="{'ai-avatar-anim': showAvatarAnim}"
-                src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji/assets/Robot/3D/robot_3d.png"
-                alt="AI助手"
-                @animationend="showAvatarAnim = false"
+      <div class="home-main-content">
+        <!-- 快捷操作 -->
+        <el-card class="home-action-card" shadow="hover">
+          <div class="action-title">
+            <el-icon><Cpu /></el-icon>
+            <span class="action-title-text">快捷操作</span>
+          </div>
+          <div class="action-btn-row">
+            <el-button type="primary" @click="openFaceDialogWithRoute('/deposit')">
+              <el-icon><WalletFilled /></el-icon>
+              存取款
+            </el-button>
+            <el-button type="primary" @click="router.push('/wealth/products')">
+              <el-icon><Money /></el-icon>
+              理财
+            </el-button>
+            <el-button type="primary" @click="router.push('/account')">
+              <el-icon><CreditCard /></el-icon>
+              账户管理
+            </el-button>
+            <el-button type="primary" @click="openFaceDialogWithRoute('/loss')">
+              <el-icon><WarningFilled /></el-icon>
+              挂失
+            </el-button>
+          </div>
+        </el-card>
+
+        <!-- 最近收支 -->
+        <el-card class="home-trans-card" shadow="hover">
+          <div class="trans-title">
+            <el-icon><Money /></el-icon>
+            <span class="trans-title-text">最近收支</span>
+          </div>
+          <div class="trans-scroll-wrap">
+            <el-table
+                :data="recentTrans"
+                border
+                fit
+                style="width:100%"
+                size="small"
+                height="210"
+                header-row-class-name="trans-table-header"
+                row-class-name="trans-table-row"
+            >
+              <el-table-column prop="date" label="日期" width="110"/>
+              <el-table-column prop="type" label="类型" width="82"/>
+              <el-table-column prop="desc" label="摘要" min-width="100"/>
+              <el-table-column prop="amount" label="金额" width="110"/>
+            </el-table>
+          </div>
+        </el-card>
+
+        <!-- 通知公告 -->
+        <el-card class="home-notice-card" shadow="hover">
+          <div class="notice-title">
+            <el-icon><BellFilled /></el-icon>
+            <span class="notice-title-text">通知公告</span>
+          </div>
+          <ul class="notice-list">
+            <li v-for="(item, idx) in noticeList" :key="item.id" @click="goToNotice(item)">
+              <span class="notice-item-title" :title="item.title">{{ item.title }}</span>
+              <span class="notice-item-date">{{ formatDate(item.createdAt) }}</span>
+              <el-icon class="notice-link-icon"><ArrowRight /></el-icon>
+            </li>
+          </ul>
+        </el-card>
+
+        <!-- AI助手亮点区块 -->
+        <el-card class="home-ai-card" shadow="always">
+          <div class="ai-helper-header">
+            <img class="ai-helper-avatar" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji/assets/Robot/3D/robot_3d.png" />
+            <div class="ai-helper-title-block">
+              <div class="ai-helper-title">AI智能助手</div>
+              <div class="ai-helper-desc">试试问我：<span class="ai-helper-tip">“分析本月收支”</span> 或 <span class="ai-helper-tip">“理财推荐”</span></div>
+            </div>
+          </div>
+          <div class="ai-helper-chat-row">
+            <el-input
+                placeholder="请输入您的金融问题，如‘分析本月收支’"
+                size="large"
+                class="ai-helper-input"
+                @keyup.enter="goToAIFullPage"
+                clearable
             />
-            <div class="ai-title">AI助手</div>
-            <div class="ai-hello">您好，有什么可以帮您？</div>
-            <!-- 聊天对话展示（最大高度限制，内容多时滚动，按钮永不被挤出去） -->
-            <div class="ai-dialog">
-              <div v-for="(msg, idx) in chatList" :key="idx" :class="['ai-msg', msg.role]">
-                <template v-if="msg.role==='user'">
-                  <div class="ai-msg-content user">{{ msg.text }}</div>
-                </template>
-                <template v-else>
-                  <div class="ai-msg-content ai">
-                    <img class="ai-avatar-mini" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji/assets/Robot/3D/robot_3d.png" alt="ai" />
-                    <span>{{ msg.text }}</span>
-                  </div>
-                </template>
-              </div>
-            </div>
-            <div class="ai-chat-row-centered">
-              <el-input
-                  v-model="aiInput"
-                  placeholder="输入您的问题..."
-                  class="ai-input"
-                  @keyup.enter="sendAIMessage"
-                  @keyup.ctrl.enter.native="ctrlEnterSend"
-                  clearable
-                  ref="aiInputRef"
-                  :class="{'dark-input': isDark}"
-              >
-                <template #suffix>
-                  <span class="voice-btn" @click="voiceInput" title="语音输入（开发中）">
-                    <svg viewBox="0 0 24 24" width="22" height="22" :class="['icon-mic', isDark?'dark-mic':'']" fill="currentColor">
-                      <path d="M12 16a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a1 1 0 1 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.92V22a1 1 0 1 0 2 0v-2.08A7 7 0 0 0 19 13z"/>
-                    </svg>
-                  </span>
-                </template>
-              </el-input>
-              <div class="ai-btn-row">
-                <el-button
-                    type="primary"
-                    @click="sendAIMessage"
-                    class="send-btn"
-                    :style="{padding: 0}"
-                >
-                  <span class="btn-content">发送</span>
-                </el-button>
-                <el-button
-                    size="default"
-                    @click="aiInput=''"
-                    class="clear-btn"
-                    :style="{padding: 0}"
-                >
-                  <span class="btn-content">清空</span>
-                </el-button>
-              </div>
-            </div>
+            <el-button type="primary" @click="goToAIFullPage" size="large">发送</el-button>
+          </div>
+          <div class="ai-helper-more" @click="goToAIFullPage">
+            <el-icon><Cpu /></el-icon>
+            体验AI智能理财 &gt;
           </div>
         </el-card>
       </div>
@@ -184,23 +209,18 @@
 </template>
 
 <script setup>
-import { Money, Notebook } from '@element-plus/icons-vue'
 import { ref, onMounted, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
-import { UserFilled, CreditCard, WarningFilled, BellFilled, WalletFilled, Cpu } from '@element-plus/icons-vue'
+import { UserFilled, CreditCard, WarningFilled, BellFilled, WalletFilled, Cpu, Money, Notebook, ArrowRight } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const username = ref('用户')
 const avatarUrl = ref('https://api.dicebear.com/7.x/identicon/svg?seed=bankuser')
-const aiInput = ref('')
 const navHover = ref(false)
-const activeMenu = ref('ai')
+const activeMenu = ref('home')
 const isDark = ref(false)
-const aiInputRef = ref(null)
-const showAvatarAnim = ref(true)
-const chatList = ref([])
 
 // 人脸识别相关
 const showFaceDialog = ref(false)
@@ -249,6 +269,8 @@ const handleMenuSelect = (index) => {
     router.push('/wealth/products')
   } else if (index === 'wealth-positions') {
     router.push('/wealth/positions')
+  } else if (index === 'ai') {
+    router.push('/ai')
   } else {
     ElMessage.info(`【${menuName(index)}】功能开发中`)
   }
@@ -264,40 +286,13 @@ const menuName = (index) =>
       ai: 'AI助手'
     }[index] || index)
 
-const sendAIMessage = async () => {
-  const q = aiInput.value.trim()
-  if (!q) return
-  chatList.value.push({ role: 'user', text: q })
-  aiInput.value = ''
-  nextTick(() => {
-    aiInputRef.value && aiInputRef.value.focus()
-    scrollToBottom()
-  })
-
-  try {
-    // 调用后端AI助手接口
-    const res = await axios.post('/api/ai/chat', { question: q })
-    chatList.value.push({ role: 'ai', text: res.data.answer || 'AI助手未能理解您的问题。' })
-    nextTick(scrollToBottom)
-  } catch (e) {
-    chatList.value.push({ role: 'ai', text: 'AI助手服务暂时不可用，请稍后再试。' })
-    nextTick(scrollToBottom)
-  }
-}
-const ctrlEnterSend = (e) => {
-  if (e.ctrlKey && e.key === 'Enter') {
-    sendAIMessage()
-  }
-}
-const voiceInput = () => {
-  ElMessage.info('语音输入功能开发中，敬请期待～')
-}
-function scrollToBottom() {
-  const dialog = document.querySelector('.ai-dialog')
-  if (dialog) dialog.scrollTop = dialog.scrollHeight
+function openFaceDialogWithRoute(route) {
+  faceNextRoute.value = route
+  openFaceDialog()
 }
 
-// 人脸识别弹窗流程
+function scrollToBottom() {}
+
 const openFaceDialog = async () => {
   faceError.value = ''
   showFaceDialog.value = true
@@ -315,7 +310,6 @@ const closeFaceDialog = () => {
   showFaceDialog.value = false
   stopCamera()
   faceError.value = ''
-  // faceNextRoute.value = ''  // 不要在这里清空
 }
 function stopCamera() {
   if (videoRef.value && videoRef.value.srcObject) {
@@ -353,8 +347,65 @@ const captureFace = async () => {
     faceLoading.value = false
   }
 }
+
+// 交易/公告/AI助手数据
+const recentTrans = ref([])
+
+function simplifyDesc(desc, type) {
+  if (!desc) return type
+  return desc.length > 10 ? desc.slice(0, 10) + '…' : desc
+}
+
 onMounted(async () => {
-  showAvatarAnim.value = true
+  try {
+    // 获取最近收支
+    const transRes = await axios.get('/api/account/transactions')
+    recentTrans.value = (transRes.data || [])
+        .filter(item => typeof item.amount === 'number')
+        .sort((a, b) => new Date(b.transactionTime) - new Date(a.transactionTime))
+        .slice(0, 5)
+        .map(item => ({
+          // 按 el-table 需要的字段格式
+          date: formatDate(item.transactionTime),
+          type: item.amount >= 0 ? '收入' : '支出',
+          desc: simplifyDesc(item.description, item.type),
+          amount: (item.amount >= 0 ? '+' : '') + Number(item.amount).toFixed(2)
+        }))
+  } catch (e) {
+    recentTrans.value = []
+  }
+})
+const noticeList = ref([])
+
+onMounted(async () => {
+  try {
+    // 获取所有公告
+    const res = await axios.get('/api/notifications')
+    // 按 createdAt 降序排列，取最新5条
+    noticeList.value = res.data
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5)
+  } catch (e) {
+    noticeList.value = []
+  }
+})
+
+const goToNotice = (item) => {
+  router.push(`/notifications/${item.id}`)
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr)
+  if (isNaN(d)) return ''
+  // 返回 YYYY-MM-DD 格式
+  return d.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+}
+
+const goToAIFullPage = () => {
+  router.push('/ai')
+}
+
+onMounted(async () => {
   try {
     const token = localStorage.getItem('token')
     if (!token) {
@@ -407,11 +458,11 @@ onMounted(async () => {
 .bank-title {
   display: flex;
   align-items: center;
-  font-size: 1.75rem;
+  font-size: 1.85rem;
   font-family: 'Segoe UI Semibold', 'PingFang SC', 'Arial', sans-serif;
-  font-weight: 700;
+  font-weight: 800;
   color: #1976d2;
-  letter-spacing: 2.5px;
+  letter-spacing: 2.8px;
   margin-left: 38px;
   user-select: none;
 }
@@ -439,7 +490,7 @@ onMounted(async () => {
 }
 .username-full {
   margin-left: 7px;
-  font-weight: 600;
+  font-weight: 700;
   max-width: 196px;
   min-height: 32px;
   height: 32px;
@@ -449,7 +500,7 @@ onMounted(async () => {
   white-space: nowrap;
   display: inline-block;
   vertical-align: middle;
-  font-size: 1.18rem;
+  font-size: 1.21rem;
   letter-spacing: 0.5px;
   color: #2a3544;
 }
@@ -503,8 +554,8 @@ onMounted(async () => {
   align-items: center;
   transition: background 0.18s;
   overflow: hidden;
-  font-weight: 600;
-  letter-spacing: 1.2px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
   justify-content: center;
   font-family: 'Segoe UI Semibold', 'PingFang SC', 'Arial', sans-serif;
   border: none;
@@ -531,7 +582,7 @@ onMounted(async () => {
 }
 .bank-menu .el-menu-item .el-icon {
   margin-right: 0;
-  font-size: 1.38em;
+  font-size: 1.45em;
   color: #1976d2;
   display: flex;
   align-items: center;
@@ -550,32 +601,7 @@ onMounted(async () => {
   display: none;
 }
 
-/* main & card */
-.ai-main-scroll {
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow-y: auto;
-  padding: 32px 0;
-  font-family: 'Segoe UI', 'PingFang SC', 'Arial', sans-serif;
-  margin-left: 56px;
-}
-.bank-layout.dark-mode .ai-main-scroll::-webkit-scrollbar,
-.bank-layout.dark-mode .ai-dialog::-webkit-scrollbar {
-  background: #232a3c;
-  width: 8px;
-}
-.bank-layout.dark-mode .ai-main-scroll::-webkit-scrollbar-thumb,
-.bank-layout.dark-mode .ai-dialog::-webkit-scrollbar-thumb {
-  background: #33415a;
-  border-radius: 8px;
-}
-.bank-layout.dark-mode .ai-main-scroll::-webkit-scrollbar-corner,
-.bank-layout.dark-mode .ai-dialog::-webkit-scrollbar-corner {
-  background: #232a3c;
-}
+/* 主内容区布局 */
 .bank-main {
   margin-left: 0;
   margin-top: 0;
@@ -588,327 +614,311 @@ onMounted(async () => {
   overflow: visible;
   font-family: 'Segoe UI', 'PingFang SC', 'Arial', sans-serif;
 }
-.ai-card {
-  min-width: 370px;
-  width: 420px;
-  max-width: 94vw;
-  min-height: 530px;
-  max-height: 650px;
-  height: 530px;
-  margin: 0 auto;
-  padding: 40px 32px 34px 32px;
-  border-radius: 36px;
-  background: #fff;
-  box-shadow: 0 20px 60px 0 rgba(25, 50, 110, 0.14);
+
+.home-main-content {
+  margin-left: 80px;
+  margin-top: 36px;
+  margin-bottom: 36px;
+  margin-right: 40px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(340px, 1fr));
+  grid-template-rows: auto auto auto;
+  grid-gap: 32px 32px;
+  width: 100%;
+  max-width: 1300px;
+  min-height: 650px;
+}
+@media (max-width: 1100px) {
+  .home-main-content {
+    grid-template-columns: 1fr;
+    margin-left: 70px;
+    margin-right: 12px;
+  }
+}
+.home-action-card {
+  min-width: 320px;
+  min-height: 110px;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  grid-column: 1;
+}
+.action-title {
+  font-size: 1.20rem;
+  color: #1976d2;
+  font-weight: 800;
+  margin-bottom: 12px;
+  display: flex;
   align-items: center;
-  box-sizing: border-box;
+  gap: 8px;
+  letter-spacing: 1.2px;
 }
-.bank-layout.dark-mode .ai-card {
-  background: #262f44;
-  color: #e2e7f6;
-  box-shadow: 0 20px 60px 0 rgba(80, 120, 200, 0.12);
+.action-title-text {
+  font-family: 'PingFang SC', 'Segoe UI', Arial, sans-serif;
+  font-weight: 700;
 }
-.ai-card-border {
+.action-btn-row {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.action-btn-row .el-button {
+  min-width: 120px;
+  font-size: 1.08rem;
+  border-radius: 24px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+}
+
+/* 最近收支-滚动表 */
+.home-trans-card {
+  min-width: 320px;
+  min-height: 220px;
+  grid-row: 2;
+  grid-column: 1;
+}
+.trans-title {
+  font-size: 1.18rem;
+  color: #1976d2;
+  font-weight: 800;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  letter-spacing: 1.2px;
+}
+.trans-title-text {
+  font-family: 'PingFang SC', 'Segoe UI', Arial, sans-serif;
+  font-weight: 700;
+}
+.trans-scroll-wrap {
+  max-height: 240px;
+  overflow-y: auto;
+  border-radius: 12px;
+  background: #f7fafd;
+  box-shadow: 0 1px 6px rgba(25,118,210,0.04);
+}
+.trans-table-header {
+  font-weight: 700 !important;
+  font-size: 1.07rem;
+  background: #e3f2fd !important;
+}
+.trans-table-row {
+  font-size: 1.04rem;
+}
+
+/* 通知公告 */
+.home-notice-card {
+  min-width: 320px;
+  min-height: 110px;
+  grid-row: 1 / span 2;
+  grid-column: 2;
+}
+.notice-title {
+  font-size: 1.18rem;
+  color: #1976d2;
+  font-weight: 800;
+  margin-bottom: 9px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  letter-spacing: 1.2px;
+}
+.notice-title-text {
+  font-family: 'PingFang SC', 'Segoe UI', Arial, sans-serif;
+  font-weight: 700;
+}
+.notice-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.notice-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 1.11rem;
+  color: #384055;
+  margin-bottom: 8px;
+  background: #f7fafd;
+  padding: 10px 12px;
+  border-radius: 11px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.16s;
+}
+.notice-list li:hover {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+.notice-item-title {
+  flex: 1 1 auto;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.notice-item-date {
+  color: #8ab8e8;
+  font-size: 0.99rem;
+  margin-left: 18px;
+  font-weight: 400;
+}
+.notice-link-icon {
+  margin-left: 10px;
+  font-size: 1.23em;
+}
+
+.home-ai-card {
+  min-width: 320px;
+  min-height: 190px;
+  grid-column: 1 / span 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: linear-gradient(90deg, #e3f2fd 80%, #cbe7fb 100%);
   border: 2px solid #ddeaff;
+  border-radius: 30px;
+  margin-top: 4px;
+  box-shadow: 0 6px 24px 0 rgba(25, 50, 110, 0.11);
+  margin-bottom: 16px;
 }
-.bank-layout.dark-mode .ai-card-border {
+.bank-layout.dark-mode .home-ai-card {
+  background: linear-gradient(90deg, #2c3a54 70%, #223159 100%);
   border: 2px solid #3c4c6e;
 }
-.ai-center {
+.ai-helper-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  width: 100%;
-  height: 100%;
-  justify-content: flex-start;
-  position: relative;
+  gap: 22px;
+  margin: 14px 0 10px 0;
 }
-.ai-avatar {
-  width: 26px;
-  height: 26px;
-  margin-bottom: 12px;
-  border-radius: 7px;
+.ai-helper-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
   background: #e3ebfc;
-  box-shadow: 0 2px 12px rgba(25,118,210,0.08);
+  box-shadow: 0 2px 12px rgba(25,118,210,0.09);
   object-fit: cover;
-  transition: transform 0.35s cubic-bezier(.6,-0.28,.74,.05);
 }
-.ai-avatar-anim {
-  animation: aiWave 1.2s cubic-bezier(.5,0,.5,1.1) 1;
-}
-@keyframes aiWave {
-  0% { transform: scale(1);}
-  18% { transform: scale(1.12) rotate(-8deg);}
-  38% { transform: scale(1.08) rotate(7deg);}
-  55% { transform: scale(1.14) rotate(-10deg);}
-  70% { transform: scale(1.04) rotate(4deg);}
-  86% { transform: scale(1.1) rotate(-3deg);}
-  100% { transform: scale(1) rotate(0deg);}
-}
-.ai-title {
-  font-size: 1.32rem;
-  color: #1976d2;
-  font-weight: 700;
-  margin-bottom: 2px;
-  letter-spacing: 1.2px;
-  font-family: 'Segoe UI', 'PingFang SC', Arial, sans-serif;
-}
-.bank-layout.dark-mode .ai-title {
-  color: #79a7fa;
-}
-.ai-hello {
-  color: #789;
-  font-size: 1.14rem;
-  margin-bottom: 15px;
-  text-align: center;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  font-weight: 500;
-  letter-spacing: 0.2px;
-}
-.bank-layout.dark-mode .ai-hello {
-  color: #b9c8e6;
-}
-/* 聊天区域最大高度，固定空间，内容多时滚动，不会挤出按钮 */
-.ai-dialog {
-  width: 100%;
-  min-height: 80px;
-  max-height: 220px;
-  flex: 0 0 220px;
-  overflow-y: auto;
-  margin-bottom: 18px;
-  background: #f7fafd;
-  border-radius: 18px;
-  padding: 16px 14px 12px 14px;
-  box-sizing: border-box;
+.ai-helper-title-block {
   display: flex;
   flex-direction: column;
-  gap: 11px;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  font-size: 1.07rem;
-  scrollbar-width: thin;
-  scrollbar-color: #aac8fc #f7fafd;
+  justify-content: center;
 }
-.bank-layout.dark-mode .ai-dialog {
-  background: #232a3c;
-  scrollbar-color: #33415a #232a3c;
-}
-.ai-msg {
-  width: 100%;
-  display: flex;
-}
-.ai-msg-content {
-  display: inline-flex;
-  align-items: center;
-  max-width: 90%;
-  word-break: break-all;
-  padding: 8px 17px;
-  border-radius: 16px;
-  font-size: 1.09rem;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  box-shadow: 0 1px 6px rgba(25,118,210,0.06);
-}
-.ai-msg.user {
-  justify-content: flex-end;
-}
-.ai-msg.user .ai-msg-content {
-  background: linear-gradient(90deg,#e3f2fd 70%,#cbe7fb 100%);
+.ai-helper-title {
+  font-size: 1.25rem;
+  font-weight: 900;
   color: #1976d2;
-  border-bottom-right-radius: 5px;
-  margin-left: 10%;
-  margin-right: 0;
-  font-size: 1.11rem;
+  letter-spacing: 1.2px;
+}
+.bank-layout.dark-mode .ai-helper-title {
+  color: #7bb4fa;
+}
+.ai-helper-desc {
+  font-size: 1.09rem;
+  color: #447;
+  margin-top: 2px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  word-break: break-all;
+}
+.ai-helper-tip {
+  color: #1e88e5;
   font-weight: 600;
 }
-.bank-layout.dark-mode .ai-msg.user .ai-msg-content {
-  background: linear-gradient(90deg,#395180 80%,#233159 100%);
-  color: #7fc4ff;
+.ai-helper-chat-row {
+  display: flex;
+  gap: 13px;
+  width: 100%;
+  margin: 14px 0 2px 0;
+  align-items: center;
 }
-.ai-msg.ai {
-  justify-content: flex-start;
+.ai-helper-input {
+  flex: 1;
+  font-size: 1.11rem;
 }
-.ai-msg.ai .ai-msg-content {
-  background: #ffffff;
-  color: #384055;
-  border-bottom-left-radius: 5px;
-  margin-right: 10%;
-  margin-left: 0;
-  font-size: 1.09rem;
+.ai-helper-output {
+  margin-top: 8px;
+  color: #1858b9;
+  background: #f4faff;
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-size: 1.08rem;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 24px;
   font-weight: 500;
+  letter-spacing: 0.3px;
 }
-.bank-layout.dark-mode .ai-msg.ai .ai-msg-content {
+.bank-layout.dark-mode .ai-helper-output {
   background: #313c5a;
   color: #e3e7f6;
 }
-.ai-avatar-mini {
-  width: 17px;
-  height: 17px;
-  border-radius: 5px;
-  margin-right: 7px;
-  background: #e3ebfc;
-  object-fit: cover;
-  box-shadow: 0 0 2px #1976d2;
-}
-.ai-chat-row-centered {
-  width: 100%;
-  max-width: 360px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: auto;
-  margin-bottom: 0;
-}
-.ai-input {
-  width: 100%;
-  font-size: 1.09rem;
-  font-family: 'Segoe UI', Arial, sans-serif;
-}
-.ai-btn-row {
-  width: 100%;
-  display: flex;
-  justify-content: space-evenly;
-  gap: 0px;
-  margin-top: 18px;
-}
-.send-btn, .clear-btn {
-  min-width: 96px;
-  font-size: 1.16rem;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  border-radius: 21px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 42px;
-  font-weight: 600;
-  text-align: center;
-  padding: 0 !important;
-  box-sizing: border-box;
-}
-.btn-content {
-  flex: 1 1 0%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 42px;
-  font-size: 1.16rem;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  font-weight: 600;
-  letter-spacing: 1.1px;
-  text-align: center;
-  padding: 0;
-}
-.send-btn {
-  background: linear-gradient(90deg,#1976d2 60%,#53a6e7 100%);
-  color: #fff;
-  border: none;
-  box-shadow: 0 2px 8px rgba(25,118,210,0.06);
-  transition: background 0.18s;
-}
-.send-btn:hover {
-  background: linear-gradient(90deg,#409EFF 70%,#53b6f7 100%);
-}
-.clear-btn {
-  background: #f7fafd;
+.ai-helper-more {
+  margin-top: 12px;
   color: #1976d2;
-  border: 1px solid #cbe7fb;
-  box-shadow: none;
-}
-.clear-btn:hover {
-  background: #e9f4fe;
-  color: #1976d2;
-  border-color: #aac8fc;
-}
-/* 夜间输入框 */
-.dark-input .el-input__wrapper {
-  background: #232a3c !important;
-  color: #e2e7f6 !important;
-  border: 1px solid #3c4c6e;
-}
-.dark-input .el-input__inner {
-  background: transparent !important;
-  color: #e2e7f6 !important;
-}
-.voice-btn {
-  margin-left: 2px;
-  vertical-align: middle;
+  font-weight: 700;
   cursor: pointer;
+  font-size: 1.13rem;
   display: flex;
   align-items: center;
-}
-.icon-mic {
-  color: #1976d2;
-  opacity: 0.7;
+  gap: 6px;
   transition: color 0.18s;
 }
-.voice-btn:hover .icon-mic {
+.ai-helper-more:hover {
   color: #409EFF;
-  opacity: 1;
 }
-.dark-mic {
-  color: #79a7fa;
-}
-::-webkit-scrollbar {
-  width: 8px;
-  background: #f6faff;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbe7fb;
-  border-radius: 8px;
-}
-.bank-layout.dark-mode ::-webkit-scrollbar {
-  background: #232a3c;
-}
-.bank-layout.dark-mode ::-webkit-scrollbar-thumb {
-  background: #33415a;
-}
-@media (max-width: 900px) {
-  .ai-main-scroll { padding: 8px 0;}
-  .ai-card {
-    min-width: 98vw;
-    max-width: 99vw;
-    padding: 18px 2vw 16px 2vw;
-    height: 98vw;
-    min-height: 400px;
-    max-height: 98vw;
-  }
-  .username-full {
-    max-width: 100px;
-  }
+.bank-layout.dark-mode .ai-helper-more {
+  color: #7bb4fa;
 }
 
 .face-dialog-content {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 8px 0 0 0;
+  align-items: center; /* 水平居中 */
+  justify-content: center; /* 垂直居中 */
+  width: 100%;
+  min-height: 340px;
+  box-sizing: border-box;
 }
 .face-title {
-  font-size: 1.18rem;
-  font-weight: 700;
-  color: #1976d2;
-  margin-bottom: 14px;
-  letter-spacing: 1px;
-  text-align: center;
   width: 100%;
+  text-align: center;
+  font-size: 1.16rem;
+  font-weight: 600;
+  margin-bottom: 20px;
 }
 .face-preview {
-  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 24px;
 }
 .face-video {
-  border-radius: 10px;
-  border: 2px solid #e3f2fd;
-  background: #222;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(25,118,210,0.12);
+  margin-bottom: 0;
+  display: block;
 }
 .face-btn-row {
   display: flex;
-  gap: 24px;
-  margin-bottom: 10px;
+  flex-direction: row;
+  justify-content: center; /* 水平居中按钮 */
+  align-items: center;
+  gap: 24px; /* 按钮间距 */
+  width: 100%;
+  margin: 22px 0 10px 0;
 }
 .face-error {
-  color: #ef5350;
-  font-size: 1.07rem;
-  margin-top: 7px;
-  font-weight: 600;
+  color: #d32f2f;
+  text-align: center;
+  margin-top: 12px;
+  font-size: 1.04rem;
+  font-weight: 500;
+  width: 100%;
 }
 </style>

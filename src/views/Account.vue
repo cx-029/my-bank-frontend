@@ -112,23 +112,25 @@
     </el-dialog>
 
     <!-- 人脸识别弹窗 -->
-    <el-dialog v-model="faceDialogVisible" title="人脸识别验证" width="400px" :close-on-click-modal="false">
-      <div v-if="!faceCaptured">
-        <div class="face-video-box">
-          <video ref="videoRef" width="340" height="240" autoplay />
+    <el-dialog v-model="faceDialogVisible" title="人脸识别验证" width="420px" :close-on-click-modal="false">
+      <div class="face-dialog-content">
+        <div v-if="!faceCaptured">
+          <div class="face-video-box">
+            <video ref="videoRef" width="340" height="240" autoplay />
+          </div>
+          <div class="face-btn-row">
+            <el-button type="primary" @click="captureFace">拍照</el-button>
+            <el-button type="default" @click="closeFaceDialog">取消</el-button>
+          </div>
         </div>
-        <div class="face-btn-row">
-          <el-button type="primary" @click="captureFace">拍照</el-button>
-          <el-button type="default" @click="closeFaceDialog">取消</el-button>
-        </div>
-      </div>
-      <div v-else>
-        <div class="face-video-box">
-          <img :src="faceImage" alt="face" width="340" height="240" />
-        </div>
-        <div class="face-btn-row">
-          <el-button type="success" @click="submitFaceReveal">提交识别</el-button>
-          <el-button type="default" @click="resetFace">重拍</el-button>
+        <div v-else>
+          <div class="face-video-box">
+            <img :src="faceImage" alt="face" width="340" height="240" />
+          </div>
+          <div class="face-btn-row">
+            <el-button type="success" @click="submitFaceReveal">提交识别</el-button>
+            <el-button type="default" @click="resetFace">重拍</el-button>
+          </div>
         </div>
       </div>
     </el-dialog>
@@ -504,6 +506,42 @@ async function submitFaceReveal() {
   border-radius: 2px;
 }
 
+/* 人脸识别弹窗整体内容居中、动画 */
+.face-dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* 垂直居中（如果有需要） */
+  width: 100%;
+  min-height: 340px;
+  animation: fadeIn 0.32s cubic-bezier(.33,.91,.54,.97);
+  box-sizing: border-box;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.96);}
+  to { opacity: 1; transform: scale(1);}
+}
+
+/* 标题居中 */
+.face-title {
+  width: 100%;
+  text-align: center;
+  font-size: 1.16rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* 视频/照片区域居中 */
+.face-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+/* 视频、照片容器 */
 .face-video-box {
   display: flex;
   align-items: center;
@@ -518,13 +556,49 @@ async function submitFaceReveal() {
   width: 340px;
   height: 240px;
   object-fit: cover;
+  display: block;
+  background: #f4f6fa;
 }
-.face-btn-row {
+
+/* 按钮居中 */
+.face-btn-row,
+.face-btn-row-center {
   display: flex;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 32px;
-  margin-top: 18px;
+  gap: 28px; /* 按钮间距 */
+  width: 100%;
+  margin: 18px 0 10px 0;
+}
+
+/* 错误信息居中 */
+.face-error {
+  color: #d32f2f;
+  text-align: center;
+  margin-top: 12px;
+  font-size: 1.04rem;
+  font-weight: 500;
+  width: 100%;
+}
+
+/* 响应式优化 */
+@media (max-width: 480px) {
+  .face-video-box {
+    width: 96vw;
+    height: auto;
+    max-width: 340px;
+    max-height: 240px;
+  }
+  .face-video-box video,
+  .face-video-box img {
+    width: 96vw;
+    height: auto;
+    max-width: 340px;
+    max-height: 240px;
+  }
+  .face-title { font-size: 1rem; }
+  .face-btn-row, .face-btn-row-center { gap: 12px; }
 }
 
 /* 小动画让余额数字渐变显示（模拟，实际可用第三方组件做数值动画） */

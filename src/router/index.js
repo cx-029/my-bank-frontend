@@ -8,6 +8,7 @@ import Account from "../views/Account.vue"
 import Deposit from "../views/Deposit.vue"
 import Loss from "../views/Loss.vue"
 import AdminProfile from "@/views/AdminProfile.vue"
+import AI from "@/views/AI.vue"
 
 const routes = [
     { path: '/register', component: Register },
@@ -21,6 +22,7 @@ const routes = [
     { path: '/deposit', component: Deposit },
     { path: '/admin/profile', component: AdminProfile },
     { path: '/loss', component: Loss },
+    { path: '/ai', name: 'AI', component: AI },
     {
         path: '/admin/notifications',
         component: () => import('@/views/AdminNotificationList.vue')
