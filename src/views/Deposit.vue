@@ -39,7 +39,7 @@
             </svg>
           </span>
           <span class="account-label">余额</span>
-          <span class="account-value balance-value din-font">{{ balance.toFixed(2) }} 元</span>
+          <span class="account-value balance-value din-font">{{ $formatMoney(balance) }} 元</span>
         </div>
         <div class="account-row">
           <span class="account-info-icon">
@@ -131,31 +131,39 @@
             <el-table :data="transactions" style="width: 100%; max-width: 900px; margin: 0 auto;" height="220" header-row-class-name="records-thead">
               <el-table-column prop="transactionTime" label="时间" width="165" />
               <el-table-column prop="type" label="类型" width="100" />
-              <el-table-column prop="amount" label="金额" width="120" />
-              <el-table-column prop="balanceAfter" label="余额" width="120" />
+              <el-table-column prop="amount" label="金额" width="120">
+                <template #default="scope">
+                  {{ $formatMoney(scope.row.amount) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="balanceAfter" label="余额" width="120">
+                <template #default="scope">
+                  {{ $formatMoney(scope.row.balanceAfter) }}
+                </template>
+              </el-table-column>
               <el-table-column prop="description" label="备注" />
             </el-table>
           </div>
         </el-tab-pane>
       </el-tabs>
       <!-- 财富报表弹窗 三大图切换 -->
-      <el-dialog v-model="showFinance" title="财富报表" width="900px" center @close="onFinanceDialogClose" class="big-dialog">
+      <el-dialog v-model="showFinance" title="财富报表" width="980px" center @close="onFinanceDialogClose" class="big-dialog">
         <el-tabs v-model="chartTab" type="card" stretch class="chart-switch-tabs">
           <el-tab-pane label="余额趋势" name="trend">
             <div class="chart-block">
               <div class="chart-title">账户余额趋势</div>
-              <svg :width="800" height="340" viewBox="0 0 800 340" class="big-sparkline">
+              <svg :width="900" height="340" viewBox="0 0 900 340" class="big-sparkline">
                 <!-- 背景 -->
-                <rect x="60" y="40" width="690" height="230" fill="#f6f8fc" rx="16"/>
+                <rect x="70" y="40" width="780" height="230" fill="#f6f8fc" rx="16"/>
                 <!-- y轴线和刻度 -->
-                <line x1="60" y1="40" x2="60" y2="270" stroke="#1976d2" stroke-width="2"/>
-                <g v-for="(yv,i) in yTicksBig" :key="i">
-                  <line x1="55" :y1="yv.y" x2="60" :y2="yv.y" stroke="#1976d2" stroke-width="2"/>
-                  <text x="48" :y="yv.y+5" text-anchor="end" font-size="14" fill="#1976d2" font-weight="bold">{{ yv.value }}</text>
+                <line x1="70" y1="40" x2="70" y2="270" stroke="#1976d2" stroke-width="2"/>
+                <g v-for="(yv,i) in yTicksBig" :key="'y'+i">
+                  <line x1="65" :y1="yv.y" x2="70" :y2="yv.y" stroke="#1976d2" stroke-width="2"/>
+                  <text x="58" :y="yv.y+5" text-anchor="end" font-size="14" fill="#1976d2" font-weight="bold">{{ $formatMoney(yv.value) }}</text>
                 </g>
                 <!-- x轴线和刻度 -->
-                <line x1="60" y1="270" x2="750" y2="270" stroke="#1976d2" stroke-width="2"/>
-                <g v-for="(xv,i) in xTicksBig" :key="i">
+                <line x1="70" y1="270" x2="850" y2="270" stroke="#1976d2" stroke-width="2"/>
+                <g v-for="(xv,i) in xTicksBig" :key="'x'+i">
                   <line :x1="xv.x" y1="270" :x2="xv.x" y2="275" stroke="#1976d2" stroke-width="2"/>
                   <text :x="xv.x" y="295" text-anchor="middle" font-size="14" fill="#1976d2" font-weight="bold">{{ xv.label }}</text>
                 </g>
@@ -168,7 +176,7 @@
                     filter="url(#glowBig)"
                 />
                 <defs>
-                  <filter id="glowBig" x="-10" y="-10" width="820" height="360">
+                  <filter id="glowBig" x="-10" y="-10" width="920" height="360">
                     <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
                     <feMerge>
                       <feMergeNode in="coloredBlur"/>
@@ -176,30 +184,6 @@
                     </feMerge>
                   </filter>
                 </defs>
-                <!-- 数据点 -->
-                <circle
-                    v-for="(pt,idx) in trendArr"
-                    :key="idx"
-                    :cx="getBigTrendX(idx)"
-                    :cy="getBigTrendY(pt.balanceAfter)"
-                    r="6"
-                    fill="#fff"
-                    stroke="#ff9800"
-                    stroke-width="3"
-                />
-                <text
-                    v-for="(pt,idx) in trendArr"
-                    :key="'label'+idx"
-                    :x="getBigTrendX(idx)"
-                    :y="getBigTrendY(pt.balanceAfter)-15"
-                    text-anchor="middle"
-                    font-size="13"
-                    fill="#1976d2"
-                    font-weight="bold"
-                    font-family="DIN Condensed"
-                >
-                  {{ pt.balanceAfter }}
-                </text>
               </svg>
             </div>
           </el-tab-pane>
@@ -231,8 +215,11 @@
                     <stop offset="1" stop-color="#ffd1d1"/>
                   </linearGradient>
                 </defs>
-                <!-- 饼图只显示图形，不显示任何具体数据或标识 -->
               </svg>
+              <div class="pie-percent-info" style="margin-top: 16px; text-align:center; font-size: 1.1rem; color: #1976d2;">
+                收入占比：{{ incomePercent }}%　
+                支出占比：{{ expensePercent }}%
+              </div>
             </div>
           </el-tab-pane>
           <el-tab-pane label="活跃度" name="active">
@@ -347,11 +334,18 @@ const bigPieExpensePath = computed(() =>
     pieTotal.value ? describeArc(170, 170, 120, income.value / pieTotal.value * 100, 100) : ''
 )
 
+const incomePercent = computed(() =>
+    pieTotal.value ? (income.value / pieTotal.value * 100).toFixed(2) : '0.00'
+)
+const expensePercent = computed(() =>
+    pieTotal.value ? (expense.value / pieTotal.value * 100).toFixed(2) : '0.00'
+)
+
 // 折线图数据（大图）
 const trendArr = computed(() =>
     [...transactions.value].sort((a, b) => new Date(a.transactionTime) - new Date(b.transactionTime))
 )
-const chartWBig = 800, chartHBig = 340, paddingLBig = 60, paddingRBig = 50, paddingTBig = 40, paddingBBig = 70
+const chartWBig = 900, chartHBig = 340, paddingLBig = 70, paddingRBig = 50, paddingTBig = 40, paddingBBig = 70
 const chartInnerWBig = chartWBig - paddingLBig - paddingRBig
 const chartInnerHBig = chartHBig - paddingTBig - paddingBBig
 const getBigTrendX = idx => {
@@ -391,15 +385,31 @@ const yTicksBig = computed(() => {
 const xTicksBig = computed(() => {
   const arr = trendArr.value
   if (!arr.length) return []
-  const num = Math.min(arr.length, 8)
-  return Array.from({length: num}, (_, i) => {
-    const idx = Math.round(i * (arr.length - 1) / (num - 1 || 1))
-    const t = arr[idx]
-    return {
-      label: t.transactionTime ? t.transactionTime.slice(5, 16).replace('T',' ') : '',
-      x: getBigTrendX(idx)
+  const maxTicks = 6
+  const step = arr.length <= 1 ? 1 : Math.ceil((arr.length - 1) / (maxTicks - 1))
+  let result = []
+  for (let i = 0; i < arr.length; i += step) {
+    const t = arr[i]
+    let label = ''
+    if (t.transactionTime) {
+      const d = new Date(t.transactionTime)
+      label = `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
     }
-  })
+    result.push({
+      label,
+      x: getBigTrendX(i)
+    })
+  }
+  if (arr.length > 1 && result[result.length-1].x !== getBigTrendX(arr.length-1)) {
+    const t = arr[arr.length-1]
+    let label = ''
+    if (t.transactionTime) {
+      const d = new Date(t.transactionTime)
+      label = `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+    }
+    result.push({label, x: getBigTrendX(arr.length-1)})
+  }
+  return result
 })
 
 // 活跃度环参数
@@ -719,7 +729,7 @@ onMounted(() => {
 .big-dialog {
   /* 让弹窗大气一点 */
   min-width: 800px;
-  max-width: 940px;
+  max-width: 1000px;
 }
 .chart-switch-tabs {
   margin-bottom: 8px;

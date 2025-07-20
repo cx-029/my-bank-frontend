@@ -29,7 +29,7 @@
             <div class="bank-card-info-row">
               <span class="bank-card-label">余额</span>
               <span class="bank-card-value animate-balance">
-                ￥{{ account?.balance ?? '--' }}
+                ￥{{ $formatMoney(account?.balance) ?? '--' }}
                 <img v-if="account?.balance >= 100000" src="https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f451.png" alt="crown" class="balance-crown"/>
               </span>
             </div>

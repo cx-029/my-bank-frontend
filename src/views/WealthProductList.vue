@@ -14,10 +14,14 @@
       <el-table-column prop="riskLevel" label="风险等级" width="90"/>
       <el-table-column prop="interestRate" label="年化收益率" width="120">
         <template #default="scope">
-          <span>{{ (scope.row.interestRate * 100).toFixed(2) }}%</span>
+          <span>{{ $formatMoney(scope.row.interestRate * 100) }}%</span>
         </template>
       </el-table-column>
-      <el-table-column prop="minAmount" label="起购金额" width="110"/>
+      <el-table-column prop="minAmount" label="起购金额" width="110">
+        <template #default="scope">
+          {{ $formatMoney(scope.row.minAmount) }}
+        </template>
+      </el-table-column>
       <el-table-column prop="status" label="状态" width="80"/>
       <el-table-column label="操作">
         <template #default="scope">
@@ -35,7 +39,7 @@
     <el-dialog v-model="purchaseDialogVisible" title="申购理财产品" width="350px">
       <div v-if="selectedProduct">
         <div>产品：<b>{{ selectedProduct.name }}</b></div>
-        <div>起购金额：{{ selectedProduct.minAmount }}</div>
+        <div>起购金额：{{ $formatMoney(selectedProduct.minAmount) }}</div>
         <el-input-number v-model="purchaseAmount" :min="selectedProduct.minAmount" label="申购金额" style="margin: 12px 0; width: 90%"/>
       </div>
       <template #footer>
