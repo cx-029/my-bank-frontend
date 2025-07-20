@@ -33,9 +33,17 @@
         <div>可赎回金额：{{ selectedPosition.amount }}</div>
         <el-input-number v-model="redeemAmount" :min="1" :max="selectedPosition.amount" label="赎回金额" style="margin: 12px 0; width: 90%"/>
       </div>
+      <div v-if="redeemResult !== null" class="redeem-result" style="margin:10px 0 0 0;">
+        <el-alert
+            :title="`赎回成功，本次实际收益：¥${redeemResult.redeemProfit.toFixed(2)}`"
+            type="success"
+            show-icon
+            :closable="false"
+        />
+      </div>
       <template #footer>
-        <el-button @click="redeemDialogVisible=false">取消</el-button>
-        <el-button type="primary" @click="confirmRedeem" :loading="redeemLoading">确认赎回</el-button>
+        <el-button @click="closeRedeemDialog">取消</el-button>
+        <el-button type="primary" @click="confirmRedeem" :loading="redeemLoading" :disabled="redeemResult !== null">确认赎回</el-button>
       </template>
     </el-dialog>
   </el-card>
@@ -53,6 +61,7 @@ const redeemDialogVisible = ref(false)
 const selectedPosition = ref(null)
 const redeemAmount = ref(0)
 const redeemLoading = ref(false)
+const redeemResult = ref(null)
 
 const goBack = () => {
   router.back()
@@ -61,7 +70,13 @@ const goBack = () => {
 const openRedeemDialog = (pos) => {
   selectedPosition.value = pos
   redeemAmount.value = pos.amount
+  redeemResult.value = null
   redeemDialogVisible.value = true
+}
+
+const closeRedeemDialog = () => {
+  redeemDialogVisible.value = false
+  redeemResult.value = null
 }
 
 const confirmRedeem = async () => {
@@ -71,12 +86,13 @@ const confirmRedeem = async () => {
   }
   redeemLoading.value = true
   try {
-    await request.post('/wealth/position/redeem', {
-      id: selectedPosition.value.id, // 关键：这里是id
+    // 后端返回 { position:..., redeemProfit:... }
+    const res = await request.post('/wealth/position/redeem', {
+      id: selectedPosition.value.id,
       amount: redeemAmount.value
     })
-    ElMessage.success('赎回成功')
-    redeemDialogVisible.value = false
+    redeemResult.value = res
+    // 自动刷新持仓，等用户关闭弹窗时
     loadPositions()
   } catch (e) {
     ElMessage.error(e?.response?.data?.message || '赎回失败')
@@ -85,9 +101,7 @@ const confirmRedeem = async () => {
 }
 
 const loadPositions = async () => {
-  // 不再传customerId，后端用当前登录用户自动查
   const res = await request.get('/wealth/position/my')
-  // 兼容后端返回格式：content 或数组
   if (res && Array.isArray(res.content)) {
     positions.value = res.content
   } else if (Array.isArray(res)) {
