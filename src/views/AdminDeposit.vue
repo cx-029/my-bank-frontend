@@ -44,8 +44,16 @@
         <el-table-column prop="id" label="流水ID" width="80"/>
         <el-table-column prop="accountId" label="账户ID" width="120"/>
         <el-table-column prop="type" label="类型" width="100"/>
-        <el-table-column prop="amount" label="金额" width="110"/>
-        <el-table-column prop="balanceAfter" label="余额" width="120"/>
+        <el-table-column prop="amount" label="金额" width="110">
+          <template #default="scope">
+            {{ $formatMoney(scope.row.amount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="balanceAfter" label="余额" width="120">
+          <template #default="scope">
+            {{ $formatMoney(scope.row.balanceAfter) }}
+          </template>
+        </el-table-column>
         <el-table-column prop="description" label="描述" min-width="180"/>
         <el-table-column prop="transactionTime" label="时间" min-width="180"/>
         <el-table-column label="操作" width="180">

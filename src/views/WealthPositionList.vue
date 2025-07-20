@@ -10,8 +10,16 @@
     </div>
     <el-table :data="positions" style="width: 100%" border>
       <el-table-column prop="productName" label="产品名称" width="160"/>
-      <el-table-column prop="amount" label="持有金额" width="110"/>
-      <el-table-column prop="expectedIncome" label="预估收益" width="110"/>
+      <el-table-column prop="amount" label="持有金额" width="110">
+        <template #default="scope">
+          {{ $formatMoney(scope.row.amount) }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="expectedIncome" label="预估收益" width="110">
+        <template #default="scope">
+          {{ $formatMoney(scope.row.expectedIncome) }}
+        </template>
+      </el-table-column>
       <el-table-column prop="purchaseDate" label="申购日期" width="120"/>
       <el-table-column prop="status" label="状态" width="90"/>
       <el-table-column label="操作">
@@ -30,12 +38,12 @@
     <el-dialog v-model="redeemDialogVisible" title="赎回理财产品" width="350px">
       <div v-if="selectedPosition">
         <div>产品：<b>{{ selectedPosition.productName }}</b></div>
-        <div>可赎回金额：{{ selectedPosition.amount }}</div>
+        <div>可赎回金额：{{ $formatMoney(selectedPosition.amount) }}</div>
         <el-input-number v-model="redeemAmount" :min="1" :max="selectedPosition.amount" label="赎回金额" style="margin: 12px 0; width: 90%"/>
       </div>
       <div v-if="redeemResult !== null" class="redeem-result" style="margin:10px 0 0 0;">
         <el-alert
-            :title="`赎回成功，本次实际收益：¥${redeemResult.redeemProfit.toFixed(2)}`"
+            :title="`赎回成功，本次实际收益：¥${$formatMoney(redeemResult.redeemProfit)}`"
             type="success"
             show-icon
             :closable="false"

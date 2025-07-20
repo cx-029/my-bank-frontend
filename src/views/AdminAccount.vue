@@ -47,7 +47,11 @@
         <el-table-column prop="id" label="账户ID" width="80"/>
         <el-table-column prop="customerId" label="客户ID" width="80"/>
         <el-table-column prop="accountType" label="类型"/>
-        <el-table-column prop="balance" label="余额"/>
+        <el-table-column prop="balance" label="余额">
+          <template #default="scope">
+            {{ $formatMoney(scope.row.balance) }}
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态"/>
         <el-table-column prop="openDate" label="开户日期"/>
         <el-table-column label="操作" width="180">
