@@ -19,7 +19,7 @@
           <el-button
               size="small"
               type="warning"
-              :disabled="scope.row.status !== '持有'"
+              :disabled="!(scope.row.status.includes('持有'))"
               @click="openRedeemDialog(scope.row)"
           >赎回</el-button>
         </template>
@@ -72,19 +72,21 @@ const confirmRedeem = async () => {
   redeemLoading.value = true
   try {
     await request.post('/wealth/position/redeem', {
-      positionId: selectedPosition.value.id,
+      id: selectedPosition.value.id, // 关键：这里是id
       amount: redeemAmount.value
     })
     ElMessage.success('赎回成功')
     redeemDialogVisible.value = false
     loadPositions()
-  } catch (e) {}
+  } catch (e) {
+    ElMessage.error(e?.response?.data?.message || '赎回失败')
+  }
   redeemLoading.value = false
 }
 
 const loadPositions = async () => {
-  const customerId = localStorage.getItem('customerId')
-  const res = await request.get('/wealth/position/my', { params: { customerId } })
+  // 不再传customerId，后端用当前登录用户自动查
+  const res = await request.get('/wealth/position/my')
   // 兼容后端返回格式：content 或数组
   if (res && Array.isArray(res.content)) {
     positions.value = res.content
