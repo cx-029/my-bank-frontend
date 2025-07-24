@@ -42,9 +42,17 @@
         </el-button>
       </div>
     </aside>
-    <!-- 主体卡片 -->
-    <section class="ai-content">
-      <el-card class="ai-card ai-card-border" shadow="always">
+    <!-- 主体内容 -->
+    <section
+        class="ai-content"
+        :class="{ 'full-width': activeTab !== 'chat' }"
+    >
+      <!-- 智能对话模块 -->
+      <el-card
+          v-if="activeTab === 'chat'"
+          class="ai-card ai-card-border"
+          shadow="always"
+      >
         <div class="ai-header">
           <img
               class="ai-avatar"
@@ -56,109 +64,113 @@
             <div class="ai-desc">智慧银行 · 您的专属智能金融助理</div>
           </div>
         </div>
-        <transition name="fade">
-          <div v-if="activeTab==='chat'">
-            <div class="ai-chat-area">
-              <div class="ai-greeting-banner">
-                <img class="greeting-img" :src="user.photoUrl" alt="AI Banner" />
-                <div>
-                  <h2 class="banner-title">您好，欢迎来到智慧银行 AI 助手</h2>
-                  <p class="banner-desc">
-                    24h为您提供智能咨询、理财建议与账户管理服务。<br>
-                    试试输入：
-                    <span class="banner-example" @click="setExample('分析本月收支')">分析本月收支</span>
-                  </p>
+        <div class="ai-chat-area">
+          <div class="ai-greeting-banner">
+            <img class="greeting-img" :src="user.photoUrl" alt="AI Banner" />
+            <div>
+              <h2 class="banner-title">您好，欢迎来到智慧银行 AI 助手</h2>
+              <p class="banner-desc">
+                24h为您提供智能咨询、理财建议与账户管理服务。<br />
+                试试输入：
+                <span class="banner-example" @click="setExample('分析本月收支')"
+                >分析本月收支</span
+                >
+              </p>
+            </div>
+          </div>
+          <div class="ai-dialog">
+            <div
+                v-for="(msg, idx) in chatList"
+                :key="idx"
+                :class="['ai-msg', msg.role]"
+            >
+              <template v-if="msg.role === 'user'">
+                <div class="ai-msg-content user">
+                  <img
+                      class="user-avatar-mini"
+                      :src="user.photoUrl"
+                      alt="user"
+                  />
+                  {{ msg.text }}
                 </div>
-              </div>
-              <div class="ai-dialog">
-                <div v-for="(msg, idx) in chatList" :key="idx" :class="['ai-msg', msg.role]">
-                  <template v-if="msg.role==='user'">
-                    <div class="ai-msg-content user">
-                      <img class="user-avatar-mini" :src="user.photoUrl" alt="user" />
-                      {{ msg.text }}
-                    </div>
-                  </template>
-                  <template v-else>
-                    <div class="ai-msg-content ai">
-                      <img class="ai-avatar-mini" :src="logoUrl" alt="ai" />
-                      <span>{{ msg.text }}</span>
-                    </div>
-                  </template>
+              </template>
+              <template v-else>
+                <div class="ai-msg-content ai">
+                  <img class="ai-avatar-mini" :src="logoUrl" alt="ai" />
+                  <span>{{ msg.text }}</span>
                 </div>
-                <div v-if="loading" class="ai-msg ai">
-                  <div class="ai-msg-content ai">
-                    <img class="ai-avatar-mini" :src="logoUrl" alt="ai" />
-                    <span>
-                      <el-icon class="loading-spin"><Loading /></el-icon>
-                      AI助手正在思考...
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div class="ai-chat-row-centered">
-                <el-input
-                    v-model="aiInput"
-                    placeholder="请输入您的金融问题，如“分析本月收支”"
-                    class="ai-input"
-                    @keyup.enter="sendAIMessage"
-                    clearable
-                    ref="aiInputRef"
-                    :disabled="loading"
-                    :class="{'dark-input': isDark}"
-                    autofocus
-                />
-                <div class="ai-btn-row">
-                  <el-button
-                      type="primary"
-                      @click="sendAIMessage"
-                      class="send-btn"
-                      :loading="loading"
-                      :disabled="loading"
-                  >
-                    <el-icon><Promotion /></el-icon>
-                    发送
-                  </el-button>
-                  <el-button
-                      size="default"
-                      @click="clearChat"
-                      class="clear-btn"
-                      :disabled="loading"
-                  >
-                    <el-icon><Delete /></el-icon>
-                    清空
-                  </el-button>
-                </div>
+              </template>
+            </div>
+            <div v-if="loading" class="ai-msg ai">
+              <div class="ai-msg-content ai">
+                <img class="ai-avatar-mini" :src="logoUrl" alt="ai" />
+                <span>
+                  <el-icon class="loading-spin"><Loading /></el-icon>
+                  AI助手正在思考...
+                </span>
               </div>
             </div>
           </div>
-        </transition>
-        <transition name="fade">
-          <div v-if="activeTab==='wealth'">
-            <WealthAnalysis />
+          <div class="ai-chat-row-centered">
+            <el-input
+                v-model="aiInput"
+                placeholder="请输入您的金融问题，如“分析本月收支”"
+                class="ai-input"
+                @keyup.enter="sendAIMessage"
+                clearable
+                ref="aiInputRef"
+                :disabled="loading"
+                :class="{ 'dark-input': isDark }"
+                autofocus
+            />
+            <div class="ai-btn-row">
+              <el-button
+                  type="primary"
+                  @click="sendAIMessage"
+                  class="send-btn"
+                  :loading="loading"
+                  :disabled="loading"
+              >
+                <el-icon><Promotion /></el-icon>
+                发送
+              </el-button>
+              <el-button
+                  size="default"
+                  @click="clearChat"
+                  class="clear-btn"
+                  :disabled="loading"
+              >
+                <el-icon><Delete /></el-icon>
+                清空
+              </el-button>
+            </div>
           </div>
-        </transition>
-        <transition name="fade">
-          <div v-if="activeTab==='goal'" class="ai-tab-placeholder">
-            <el-empty description="敬请期待 · 目标设定、储蓄追踪、AI路径分解等"/>
-          </div>
-        </transition>
-        <transition name="fade">
-          <div v-if="activeTab==='risk'" class="ai-tab-placeholder">
-            <el-empty description="敬请期待 · 异常检测、风险提示、智能解释等"/>
-          </div>
-        </transition>
+        </div>
       </el-card>
+      <!-- 其他模块 -->
+      <div v-else>
+        <WealthAnalysis v-if="activeTab === 'wealth'" />
+        <el-empty
+            v-if="activeTab === 'goal'"
+            description="敬请期待 · 目标设定、储蓄追踪、AI路径分解等"
+        />
+        <el-empty
+            v-if="activeTab === 'risk'"
+            description="敬请期待 · 异常检测、风险提示、智能解释等"
+        />
+      </div>
     </section>
   </div>
 </template>
 
 <script setup>
+// 引入必要的组件和功能
 import WealthAnalysis from "@/views/WealthAnalysis.vue";
-import { ref, nextTick, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import axios from 'axios'
-import { getProfile } from '@/api/profile'
+import { ref, nextTick, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import axios from "axios";
+import { getProfile } from "@/api/profile";
 import {
   ChatLineSquare,
   PieChart,
@@ -168,72 +180,79 @@ import {
   Loading,
   Promotion,
   Delete,
-} from '@element-plus/icons-vue'
+} from "@element-plus/icons-vue";
 
-const isDark = ref(false)
-const activeTab = ref('chat')
-const aiInput = ref('')
-const aiInputRef = ref(null)
-const loading = ref(false)
+// 状态变量
+const isDark = ref(false);
+const activeTab = ref("chat");
+const aiInput = ref("");
+const aiInputRef = ref(null);
+const loading = ref(false);
 const chatList = ref([
-  { role: 'ai', text: '您好，我是AI助手，有什么可以帮您？' }
-])
-const router = useRouter()
+  { role: "ai", text: "您好，我是AI助手，有什么可以帮您？" },
+]);
+const router = useRouter();
 
 // 默认AI头像
-const logoUrl = ref('https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji/assets/Robot/3D/robot_3d.png')
+const logoUrl = ref(
+    "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji/assets/Robot/3D/robot_3d.png"
+);
 
 // 当前登录用户信息
 const user = ref({
-  name: '',
-  photoUrl: ''
-})
+  name: "",
+  photoUrl: "",
+});
 
 onMounted(async () => {
   try {
-    const { data } = await getProfile()
-    user.value = data
+    const { data } = await getProfile();
+    user.value = data;
     if (!user.value.photoUrl) {
-      user.value.photoUrl = 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji/assets/People/3D/man_3d.png'
+      user.value.photoUrl =
+          "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji/assets/People/3D/man_3d.png";
     }
   } catch (e) {
-    user.value.photoUrl = 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji/assets/People/3D/man_3d.png'
+    user.value.photoUrl =
+        "https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji/assets/People/3D/man_3d.png";
   }
-})
+});
 
 const sendAIMessage = async () => {
-  const q = aiInput.value.trim()
-  if (!q || loading.value) return
-  chatList.value.push({ role: 'user', text: q })
-  aiInput.value = ''
-  nextTick(() => aiInputRef.value && aiInputRef.value.focus())
-  loading.value = true
+  const q = aiInput.value.trim();
+  if (!q || loading.value) return;
+  chatList.value.push({ role: "user", text: q });
+  aiInput.value = "";
+  nextTick(() => aiInputRef.value && aiInputRef.value.focus());
+  loading.value = true;
   try {
-    const resp = await axios.post('/api/ai/chat', { question: q })
-    let answer = resp?.data?.answer || 'AI智能服务暂不可用，请稍后重试。'
-    chatList.value.push({ role: 'ai', text: answer })
+    const resp = await axios.post("/api/ai/chat", { question: q });
+    let answer = resp?.data?.answer || "AI智能服务暂不可用，请稍后重试。";
+    chatList.value.push({ role: "ai", text: answer });
   } catch (e) {
-    chatList.value.push({ role: 'ai', text: 'AI助手出错了，请稍后再试。' })
-    ElMessage.error('AI助手服务异常')
+    chatList.value.push({ role: "ai", text: "AI助手出错了，请稍后再试。"});
+    ElMessage.error("AI助手服务异常");
   } finally {
-    loading.value = false
-    nextTick(() => aiInputRef.value && aiInputRef.value.focus())
+    loading.value = false;
+    nextTick(() => aiInputRef.value && aiInputRef.value.focus());
   }
-}
+};
 
 function clearChat() {
-  chatList.value = [{ role: 'ai', text: '您好，我是AI助手，有什么可以帮您？' }]
-  aiInput.value = ''
-  nextTick(() => aiInputRef.value && aiInputRef.value.focus())
+  chatList.value = [
+    { role: "ai", text: "您好，我是AI助手，有什么可以帮您？" },
+  ];
+  aiInput.value = "";
+  nextTick(() => aiInputRef.value && aiInputRef.value.focus());
 }
 
 function goHome() {
-  router.push({ path: '/home' })
+  router.push({ path: "/home" });
 }
 
 function setExample(text) {
-  aiInput.value = text
-  nextTick(() => aiInputRef.value && aiInputRef.value.focus())
+  aiInput.value = text;
+  nextTick(() => aiInputRef.value && aiInputRef.value.focus());
 }
 </script>
 
