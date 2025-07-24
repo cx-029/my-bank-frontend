@@ -117,6 +117,7 @@ export default {
         if (res.data.token) {
           localStorage.setItem('token', res.data.token)
           localStorage.setItem('role', res.data.role || '') // 保存角色
+          localStorage.setItem('accountId', res.data.accountId || '') // 保存 accountId
           axios.defaults.headers.common['Authorization'] = 'Bearer ' + res.data.token
 
           // 分角色跳转
