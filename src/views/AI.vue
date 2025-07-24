@@ -133,8 +133,8 @@
           </div>
         </transition>
         <transition name="fade">
-          <div v-if="activeTab==='wealth'" class="ai-tab-placeholder">
-            <el-empty description="敬请期待 · 智能收支分析、理财建议、资产分布等"/>
+          <div v-if="activeTab==='wealth'">
+            <WealthAnalysis />
           </div>
         </transition>
         <transition name="fade">
@@ -153,6 +153,7 @@
 </template>
 
 <script setup>
+import WealthAnalysis from "@/views/WealthAnalysis.vue";
 import { ref, nextTick, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
