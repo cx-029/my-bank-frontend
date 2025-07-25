@@ -1,18 +1,23 @@
 <template>
   <el-card class="personal-recommendation-card" shadow="always">
     <div class="recommendation-header">
-      <el-icon><Flag /></el-icon>
-      <h2>个性化建议</h2>
+      <el-icon class="header-icon"><Flag /></el-icon>
+      <h2 class="header-title">个性化建议</h2>
+      <el-button
+          type="primary"
+          icon="Refresh"
+          circle
+          size="medium"
+          class="refresh-button"
+          @click="forceRefresh"
+      ></el-button>
     </div>
     <div v-if="loading" class="loading-area">
       <el-icon class="loading-spin"><Loading /></el-icon>
-      正在加载个性化建议...
+      <span>正在加载个性化建议...</span>
     </div>
     <div v-else class="markdown-container">
       <div v-html="renderedMarkdown" class="markdown-content"></div>
-    </div>
-    <div class="refresh-button-container">
-      <el-button type="danger" size="small" @click="forceRefresh">强制刷新</el-button>
     </div>
   </el-card>
 </template>
@@ -115,69 +120,117 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 卡片样式 */
 .personal-recommendation-card {
   padding: 20px;
   border-radius: 16px;
   font-family: 'Inter', 'PingFang SC', 'Arial', sans-serif;
-  max-width: 800px;
+  max-width: 900px;
   margin: auto;
+  background-color: #fdfdfd;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
+
+/* 标题栏样式 */
+.recommendation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #eaeaea;
+  padding-bottom: 10px;
+}
+
+.header-title {
+  font-size: 24px; /* 更大的标题字体 */
+  color: #2c3e50;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.header-icon {
+  font-size: 28px;
+  color: #409eff;
+  margin-right: 10px;
+}
+
+.refresh-button {
+  margin-left: 10px;
+}
+
+/* 加载区域样式 */
 .loading-area {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100px;
+  min-height: 200px; /* 更高的加载区域 */
+  font-size: 18px; /* 更大的字体 */
+  color: #666;
 }
+
+/* Markdown 容器样式 */
 .markdown-container {
-  margin-top: 20px;
+  margin-top: 25px;
   overflow-y: auto;
   max-height: 70vh; /* 限制高度以适应一页显示 */
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.05);
+  line-height: 1.6; /* 行距缩短 */
 }
+
+/* Markdown 内容样式 */
 .markdown-content {
-  font-size: 16px;
-  line-height: 1.8;
+  font-size: 18px; /* 增大字体 */
+  line-height: 1.6; /* 调整行距为 1.6 */
   color: #333;
   word-wrap: break-word;
   white-space: pre-wrap;
+  padding: 10px;
 }
+
 .markdown-content h1,
 .markdown-content h2,
 .markdown-content h3 {
   color: #2c3e50;
-  margin-top: 20px;
+  margin-top: 20px; /* 调整标题的顶部间距 */
   margin-bottom: 10px;
   font-weight: bold;
+  border-bottom: 2px solid #eaeaea; /* 更加明显的分隔线 */
+  padding-bottom: 6px;
 }
+
 .markdown-content p {
-  margin-bottom: 10px;
+  margin-bottom: 10px; /* 缩小段落间隔 */
   text-align: justify;
 }
+
 .markdown-content ul {
-  padding-left: 20px;
+  padding-left: 25px;
   list-style-type: disc;
-  margin-bottom: 10px;
+  margin-bottom: 10px; /* 缩小列表间隔 */
 }
+
 .markdown-content ol {
-  padding-left: 20px;
+  padding-left: 25px;
   list-style-type: decimal;
-  margin-bottom: 10px;
+  margin-bottom: 10px; /* 缩小列表间隔 */
 }
+
 .markdown-content a {
   color: #409eff;
   text-decoration: none;
 }
+
 .markdown-content a:hover {
   text-decoration: underline;
 }
-/* 限制图片大小 */
+
+/* 图片样式，限制大小 */
 .markdown-content img {
   max-width: 100%;
   height: auto;
   display: block;
-  margin: 10px auto;
-}
-.refresh-button-container {
-  margin-top: 15px;
-  text-align: center;
+  margin: 15px auto;
 }
 </style>
