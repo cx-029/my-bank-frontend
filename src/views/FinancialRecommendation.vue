@@ -26,11 +26,27 @@
       <!-- 推荐产品标签页 -->
       <el-tab-pane label="推荐产品" name="recommendations">
         <div class="tab-content">
-          <ul class="recommendations-list">
-            <li v-for="(product, index) in recommendations" :key="index">
-              🏦 {{ product }}
-            </li>
-          </ul>
+          <div class="recommendations-row">
+            <div
+                class="recommendation-card"
+                v-for="(product, index) in recommendations"
+                :key="index"
+            >
+              <h3 class="product-name">{{ product.name }}</h3>
+              <p class="product-description">{{ product.description }}</p>
+              <ul class="product-details">
+                <li><strong>风险等级：</strong>{{ product.riskLevel }}</li>
+                <li><strong>年化利率：</strong>{{ (product.interestRate * 100).toFixed(2) }}%</li>
+                <li><strong>最低投资金额：</strong>￥{{ product.minAmount }}</li>
+              </ul>
+              <a
+                  class="buy-btn"
+                  :href="`http://localhost:5173/wealth/products?id=${product.id}`"
+              >
+                立即购买
+              </a>
+            </div>
+          </div>
         </div>
       </el-tab-pane>
 
@@ -39,21 +55,42 @@
         <div class="tab-content">
           <div class="explanations">
             <h3>评分指标解释</h3>
-            <ul>
-              <li><strong>收入稳定性 (Income Stability)：</strong> 表示收入波动情况，分数越高，收入越稳定。</li>
-              <li><strong>支出稳定性 (Expense Stability)：</strong> 表示支出波动情况，分数越高，支出越稳定。</li>
-              <li><strong>现金流 (Cash Flow)：</strong> 反映平均月现金流，分数越高表示现金流越健康。</li>
-              <li><strong>流动性 (Liquidity)：</strong> 短期资金储备能力，分数越高越好。</li>
-              <li><strong>投资贡献 (Investment Contribution)：</strong> 表示投资收益对整体收入的贡献，分数越高表示投资规划更合理。</li>
-              <li><strong>收入趋势 (Income Trend)：</strong> 收入随时间的变化趋势，分数越高表明趋势更积极。</li>
-              <li><strong>支出趋势 (Expense Trend)：</strong> 支出随时间的变化趋势，分数越高表明支出控制更合理。</li>
+            <ul class="explanations-list">
+              <li>
+                <span class="term">收入稳定性 (Income Stability)：</span>
+                <span>表示收入波动情况，分数越高，收入越稳定。</span>
+              </li>
+              <li>
+                <span class="term">支出稳定性 (Expense Stability)：</span>
+                <span>表示支出波动情况，分数越高，支出越稳定。</span>
+              </li>
+              <li>
+                <span class="term">现金流 (Cash Flow)：</span>
+                <span>反映平均月现金流，分数越高表示现金流越健康。</span>
+              </li>
+              <li>
+                <span class="term">流动性 (Liquidity)：</span>
+                <span>短期资金储备能力，分数越高越好。</span>
+              </li>
+              <li>
+                <span class="term">投资贡献 (Investment Contribution)：</span>
+                <span>表示投资收益对整体收入的贡献，分数越高表示投资规划更合理。</span>
+              </li>
+              <li>
+                <span class="term">收入趋势 (Income Trend)：</span>
+                <span>收入随时间的变化趋势，分数越高表明趋势更积极。</span>
+              </li>
+              <li>
+                <span class="term">支出趋势 (Expense Trend)：</span>
+                <span>支出随时间的变化趋势，分数越高表明支出控制更合理。</span>
+              </li>
             </ul>
             <h3>评分范围</h3>
-            <ul>
-              <li>80-100 分：优秀 🌟</li>
-              <li>60-79 分：良好 👍</li>
-              <li>40-59 分：需改进 ⚠️</li>
-              <li>0-39 分：较差 ❌</li>
+            <ul class="explanations-list">
+              <li><span class="term">80-100 分：</span><span>优秀 🌟</span></li>
+              <li><span class="term">60-79 分：</span><span>良好 👍</span></li>
+              <li><span class="term">40-59 分：</span><span>需改进 ⚠️</span></li>
+              <li><span class="term">0-39 分：</span><span>较差 ❌</span></li>
             </ul>
           </div>
         </div>
@@ -131,11 +168,11 @@ onMounted(async () => {
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
-/* 评分列表样式 */
+/* 评分网格布局 */
 .scores-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -176,37 +213,79 @@ onMounted(async () => {
   font-size: 1.2rem;
 }
 
-/* 推荐产品列表样式 */
-.recommendations-list {
+/* 推荐产品一行布局 */
+.recommendations-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: nowrap; /* 确保一行显示 */
+}
+
+.recommendation-card {
+  flex: 1 1 30%; /* 确保三个卡片占据一行 */
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.product-name {
+  font-size: 1.2rem;
+  color: #1976d2;
+  font-weight: bold;
+}
+
+.product-description {
+  font-size: 1rem;
+  color: #555;
+  margin: 6px 0;
+}
+
+.product-details {
+  list-style: none;
+  padding: 0;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.product-details li {
+  margin-bottom: 4px;
+}
+
+.buy-btn {
+  padding: 10px 20px;
+  color: #fff;
+  background-color: #1976d2;
+  border: none;
+  border-radius: 4px;
+  text-decoration: none;
+  text-align: center;
+}
+
+.buy-btn:hover {
+  background-color: #155fa0;
+}
+
+/* 评分解释样式 */
+.explanations-list {
   list-style: none;
   padding: 0;
 }
 
-.recommendations-list li {
-  font-size: 1.1rem;
-  color: #555;
-  margin-bottom: 12px;
-  padding: 12px;
-  background: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+.explanations-list li {
+  margin-bottom: 10px;
 }
 
-/* 评分解释样式 */
-.explanations h3 {
-  font-size: 1.4rem;
-  color: #1976d2;
-  margin-bottom: 12px;
+.term {
   font-weight: bold;
-}
-
-.explanations ul li {
-  font-size: 1rem;
-  color: #444;
-  margin-bottom: 8px;
-}
-
-.explanations ul li strong {
   color: #1976d2;
+}
+
+.term + span {
+  color: #000;
 }
 </style>
