@@ -25,9 +25,9 @@
             <el-icon><Flag /></el-icon>
             <span>目标管理</span>
           </li>
-          <li :class="{active: activeTab==='risk'}" @click="activeTab='risk'">
-            <el-icon><Warning /></el-icon>
-            <span>风险安全</span>
+          <li :class="{active: activeTab==='recommendation'}" @click="activeTab='recommendation'">
+            <el-icon><PieChart /></el-icon> <!-- 图标可以选择更合适的 -->
+            <span>理财推荐</span>
           </li>
         </ul>
       </nav>
@@ -150,6 +150,7 @@
       <!-- 其他模块 -->
       <div v-else>
         <WealthAnalysis v-if="activeTab === 'wealth'" />
+        <FinancialRecommendation v-if="activeTab === 'recommendation'" />
         <el-empty
             v-if="activeTab === 'goal'"
             description="敬请期待 · 目标设定、储蓄追踪、AI路径分解等"
@@ -165,6 +166,7 @@
 
 <script setup>
 // 引入必要的组件和功能
+import FinancialRecommendation from "@/views/FinancialRecommendation.vue";
 import WealthAnalysis from "@/views/WealthAnalysis.vue";
 import { ref, nextTick, onMounted } from "vue";
 import { useRouter } from "vue-router";
