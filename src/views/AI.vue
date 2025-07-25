@@ -21,13 +21,13 @@
             <el-icon><PieChart /></el-icon>
             <span>财富分析</span>
           </li>
-          <li :class="{active: activeTab==='goal'}" @click="activeTab='goal'">
-            <el-icon><Flag /></el-icon>
-            <span>目标管理</span>
-          </li>
           <li :class="{active: activeTab==='recommendation'}" @click="activeTab='recommendation'">
-            <el-icon><PieChart /></el-icon> <!-- 图标可以选择更合适的 -->
+            <el-icon><PieChart /></el-icon>
             <span>理财推荐</span>
+          </li>
+          <li :class="{active: activeTab==='personal'}" @click="activeTab='personal'">
+            <el-icon><Flag /></el-icon>
+            <span>个性建议</span>
           </li>
         </ul>
       </nav>
@@ -151,14 +151,7 @@
       <div v-else>
         <WealthAnalysis v-if="activeTab === 'wealth'" />
         <FinancialRecommendation v-if="activeTab === 'recommendation'" />
-        <el-empty
-            v-if="activeTab === 'goal'"
-            description="敬请期待 · 目标设定、储蓄追踪、AI路径分解等"
-        />
-        <el-empty
-            v-if="activeTab === 'risk'"
-            description="敬请期待 · 异常检测、风险提示、智能解释等"
-        />
+        <PersonalRecommendation v-if="activeTab === 'personal'" />
       </div>
     </section>
   </div>
@@ -166,6 +159,7 @@
 
 <script setup>
 // 引入必要的组件和功能
+import PersonalRecommendation from "@/views/PersonalRecommendation.vue";
 import FinancialRecommendation from "@/views/FinancialRecommendation.vue";
 import WealthAnalysis from "@/views/WealthAnalysis.vue";
 import { ref, nextTick, onMounted } from "vue";
